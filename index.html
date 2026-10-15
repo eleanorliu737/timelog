@@ -15,22 +15,23 @@
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
 [hidden]{display:none!important}
-/* Layout: one-screen app. Sticky header with week nav + two tabs; scrollable week grid (hours down, days across); bottom sheet for editing; summary as a stacked report. */
+/* Layout: one-screen app. Sticky header (title, 3 tabs, period nav); views: week grid, daily check-in, summary report; bottom sheet for editing. */
 :root{
   --bg:#EDF0F3; --surface:#FFFFFF; --ink:#1B232E; --muted:#667283; --line:#D3DAE2; --accent:#1F5F7A; --accent-ink:#FFFFFF;
-  --warn:#B4532A; --warn-bg:#FBEDE5; --mix:17%; --today:#E3EBF2;
-  --c-sleep:#6E74A6; --c-study:#2F62C8; --c-work:#23866A; --c-read:#9A6A2E; --c-sport:#2A9AA0; --c-meal:#D18A28;
-  --c-commute:#8C93A0; --c-social:#B4508C; --c-phone:#D2483E; --c-chores:#7C8B3A; --c-other:#9AA3AE;
+  --warn:#B4532A; --warn-bg:#FBEDE5; --ok:#23866A; --mix:17%; --today:#E3EBF2;
+  --c-sleep:#6E74A6; --c-meditate:#7FA05A; --c-reply:#3F97CF; --c-write:#8E5BB8; --c-hobby:#D9A12E;
+  --c-study:#2F62C8; --c-work:#23866A; --c-read:#9A6A2E; --c-sport:#2A9AA0; --c-meal:#C9774A;
+  --c-commute:#8C93A0; --c-social:#C2508C; --c-phone:#D2483E; --c-chores:#8C7B6A; --c-other:#A9B0B9;
   --f-body:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
   --f-disp:"Noto Serif SC","Songti SC",serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#11151B; --surface:#1A2029; --ink:#E5E9EF; --muted:#8B96A6; --line:#2A333F; --accent:#6FB3CF; --accent-ink:#0E1A20;
-  --warn:#F0956A; --warn-bg:#2E1E17; --mix:30%; --today:#1E2833; color-scheme:dark}}
+  --warn:#F0956A; --warn-bg:#2E1E17; --ok:#4FC39C; --mix:30%; --today:#1E2833; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#11151B; --surface:#1A2029; --ink:#E5E9EF; --muted:#8B96A6; --line:#2A333F; --accent:#6FB3CF; --accent-ink:#0E1A20;
-  --warn:#F0956A; --warn-bg:#2E1E17; --mix:30%; --today:#1E2833; color-scheme:dark}
+  --warn:#F0956A; --warn-bg:#2E1E17; --ok:#4FC39C; --mix:30%; --today:#1E2833; color-scheme:dark}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit;cursor:pointer}
@@ -38,10 +39,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .app{display:flex;flex-direction:column;height:100%}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 8px;display:flex;flex-direction:column;gap:8px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-h1{font-family:var(--f-disp);font-weight:600;font-size:20px;margin:0;letter-spacing:.02em}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{font-family:var(--f-disp);font-weight:600;font-size:19px;margin:0;letter-spacing:.02em;white-space:nowrap}
 .tabs{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
-.tabs button{border:0;background:none;padding:5px 14px;border-radius:999px;font-size:13px;color:var(--muted)}
+.tabs button{border:0;background:none;padding:5px 12px;border-radius:999px;font-size:13px;color:var(--muted);white-space:nowrap}
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
 .nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .nav .lbl{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
@@ -56,16 +57,19 @@ main{flex:1;min-height:0;overflow:auto;padding-left:max(16px,env(safe-area-inset
 table.grid{border-collapse:separate;border-spacing:0;width:100%;min-width:360px;table-layout:fixed}
 .grid th,.grid td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0}
 .grid tr>*:last-child{border-right:0}
-.grid thead th{position:sticky;top:0;background:var(--surface);z-index:2;font-weight:500;font-size:11px;padding:6px 2px;color:var(--muted)}
+.grid thead th{position:sticky;top:0;background:var(--surface);z-index:2;font-weight:500;font-size:11px;padding:5px 2px;color:var(--muted)}
 .grid thead th button{border:0;background:none;padding:0;width:100%;display:flex;flex-direction:column;align-items:center;gap:1px;color:inherit}
 .grid thead th .d{font-family:var(--f-mono);font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
 .grid thead th .w{font-size:10px;font-family:var(--f-mono)}
+.grid thead th .pips{display:flex;gap:2px;margin-top:2px}
+.grid thead th .pips i{width:4px;height:4px;border-radius:50%;background:var(--line)}
+.grid thead th .pips i.on{background:var(--accent)}
 .grid thead th.today{background:var(--today)}
 .grid thead th.today .d{color:var(--accent);font-weight:500}
 .grid col.hc{width:38px}
 .grid td.h{font-family:var(--f-mono);font-size:10px;color:var(--muted);text-align:center;vertical-align:top;padding-top:4px;font-variant-numeric:tabular-nums}
 .grid tr.split td{border-top:2px solid var(--line)}
-.cell{display:block;width:100%;height:40px;border:0;background:none;padding:3px 3px;text-align:left;font-size:11px;line-height:1.25;overflow:hidden;position:relative}
+.cell{display:block;width:100%;height:40px;border:0;background:none;padding:3px;text-align:left;font-size:11px;line-height:1.25;overflow:hidden;position:relative}
 .cell span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all}
 .cell.f{background:color-mix(in srgb,var(--cc) var(--mix),var(--surface));box-shadow:inset 3px 0 0 var(--cc)}
 .cell.auto::after{content:"";position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:var(--cc)}
@@ -81,7 +85,7 @@ td.today-col{background:var(--today)}
   display:flex;flex-direction:column;gap:12px;max-width:560px;margin:0 auto;box-shadow:0 -8px 30px rgb(0 0 0 / .18)}
 .sheet h2{margin:0;font-size:15px;font-weight:500;font-family:var(--f-mono)}
 .sheet .sub{font-size:12px;color:var(--muted)}
-.field{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px}
+.field{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:13px;display:inline-flex;align-items:center;gap:5px}
 .chip i{width:8px;height:8px;border-radius:50%;background:var(--cc)}
@@ -93,54 +97,82 @@ td.today-col{background:var(--today)}
 .actions{display:flex;gap:8px}
 .actions button{flex:1;border-radius:10px;padding:11px;font-size:14px;border:1px solid var(--line);background:var(--surface)}
 .actions .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+/* check-in */
+.wrapc{display:flex;flex-direction:column;gap:14px;max-width:640px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.card h3{margin:0 0 10px;font-size:13px;font-weight:500;display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.card h3 small{color:var(--muted);font-weight:400;font-size:12px}
+.card h3 .score{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.items{display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:30px minmax(0,1fr);gap:4px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0;padding-top:2px}
+.tick{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:14px;line-height:1;color:transparent}
+.tick.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.item .nm{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.item .nm b{font-weight:500;font-size:14px}
+.item .nm span{font-size:11px;color:var(--muted)}
+.item .tag{font-size:10px;border-radius:4px;padding:1px 5px;background:var(--bg);color:var(--muted)}
+.item .info{grid-column:2;font-family:var(--f-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.item input{grid-column:2;border:0;border-bottom:1px dashed var(--line);background:none;color:var(--ink);font:inherit;font-size:13px;padding:3px 0;width:100%}
+.item input::placeholder{color:var(--muted);opacity:.7}
+.wakebox{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.wakebox input{width:auto;font-family:var(--f-mono)}
+.prog{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
+.prog i{aspect-ratio:1;max-width:100%;border-radius:3px;background:var(--bg);border:1px solid var(--line)}
+.prog i.p{border-color:transparent}
+.prog i.cur{outline:2px solid var(--accent);outline-offset:1px}
 /* summary */
 .sum{display:flex;flex-direction:column;gap:14px;max-width:760px;margin:0 auto}
+.seg{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}
 .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 @media (min-width:620px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
 .kpi .k{font-size:11px;color:var(--muted)}
 .kpi .v{font-family:var(--f-mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;margin-top:2px}
 .kpi .v small{font-size:12px;color:var(--muted);font-weight:400}
 .kpi .d{font-size:11px;color:var(--muted);margin-top:2px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
-.card h3{margin:0 0 10px;font-size:13px;font-weight:500}
-.card h3 small{color:var(--muted);font-weight:400;margin-left:6px}
 .bars{display:flex;flex-direction:column;gap:7px}
-.bar{display:grid;grid-template-columns:56px 1fr 46px;align-items:center;gap:8px;font-size:12px}
+.bar{display:grid;grid-template-columns:64px 1fr 74px;align-items:center;gap:8px;font-size:12px}
 .bar .t{height:12px;border-radius:3px;background:var(--bg);overflow:hidden}
 .bar .t b{display:block;height:100%;background:var(--cc);border-radius:3px}
-.bar .n{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.bar .n{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:11px}
 .stack{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--bg)}
 .stack b{height:100%;background:var(--cc)}
 .part{display:grid;grid-template-columns:40px 1fr;gap:8px;align-items:center;font-size:12px}
 .part .top3{grid-column:2;font-size:11px;color:var(--muted);margin-top:-3px}
 .parts{display:flex;flex-direction:column;gap:10px}
+.mx{overflow-x:auto}
+.mxg{display:grid;gap:3px;align-items:center;min-width:0}
+.mxg .rl{font-size:11px;white-space:nowrap;padding-right:6px}
+.mxg .cl{font-family:var(--f-mono);font-size:9px;color:var(--muted);text-align:center}
+.mxg i{aspect-ratio:1;max-width:100%;border-radius:2px;background:var(--bg)}
 svg text{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
 .empty{text-align:center;padding:28px 12px;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
 .demo-tag{display:inline-block;font-size:11px;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:2px 8px}
 .tools{display:flex;flex-direction:column;gap:8px}
 .tools textarea{min-height:90px;font-family:var(--f-mono);font-size:13px}
 .note{font-size:12px;color:var(--muted);line-height:1.6}
+@media (max-width:380px){.tabs button{padding:5px 9px}h1{font-size:17px}}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
 </style>
 </head><body>
-
 <div class="app">
   <header>
     <div class="top">
       <h1>时间日志</h1>
       <div class="tabs" role="tablist">
         <button id="tabLog" role="tab" aria-selected="true">记录</button>
+        <button id="tabChk" role="tab" aria-selected="false">打卡</button>
         <button id="tabSum" role="tab" aria-selected="false">总结</button>
       </div>
     </div>
     <div class="nav">
       <button class="iconbtn" id="prev" aria-label="上一段">‹</button>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0">
         <span class="lbl" id="rangeLbl"></span>
         <span class="sync" id="sync">本机保存</span>
       </div>
-      <div class="row" style="gap:6px">
+      <div class="row" style="gap:6px;flex-wrap:nowrap">
         <button class="ghost" id="todayBtn">今天</button>
         <button class="iconbtn" id="next" aria-label="下一段">›</button>
       </div>
@@ -152,39 +184,68 @@ svg text{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
 
 <script>
 (function(){
+/* Order matters: the first category whose keyword matches wins. */
 const CATS=[
  {id:"sleep",n:"睡觉",k:["睡","sleep","nap","躺"]},
+ {id:"meditate",n:"静坐",k:["静坐","冥想","meditat","正念","呼吸"]},
+ {id:"reply",n:"回信",k:["回信","回消息","回邮件","回复","reply"]},
+ {id:"write",n:"写作",k:["写作","写文","公众号","日记","writing","文章","博客","journal"]},
+ {id:"hobby",n:"爱好",k:["爱好","画画","画","琴","吉他","手工","摄影","书法","烘焙","拼图","园艺","hobby","乐器","钩织","唱"]},
  {id:"study",n:"学习",k:["学","课","复习","刷题","背","论文","aws","azure","course","study","leetcode","coding","代码","项目","编程","德语","german","ml","nlp","作品集"]},
  {id:"work",n:"工作",k:["上班","工作","班","host","餐厅","shift","面试","简历","求职","work","job","外贸","客户","邮件"]},
  {id:"read",n:"阅读",k:["读","阅读","看书","书","read","kindle","book"]},
  {id:"sport",n:"运动",k:["跑","健身","瑜伽","散步","运动","gym","walk","run","yoga","游泳"]},
  {id:"meal",n:"吃饭",k:["吃","饭","早餐","午餐","晚餐","做饭","cook","lunch","dinner","breakfast","咖啡"]},
  {id:"commute",n:"路上",k:["通勤","公交","开车","练车","bus","dart","luas","路上","驾","drive"]},
- {id:"social",n:"社交",k:["朋友","聊天","约会","电话","家人","视频","聚","party","call"]},
+ {id:"social",n:"社交",k:["朋友","聊天","约会","电话","家人","视频","聚","party","call","见面"]},
  {id:"phone",n:"刷手机",k:["instagram","ins","小红书","抖音","tiktok","youtube","b站","刷","netflix","剧","游戏","微博","reddit","手机","x.com","twitter"]},
  {id:"chores",n:"杂事",k:["洗","打扫","家务","购物","超市","收拾","整理","办事"]},
  {id:"other",n:"其他",k:[]}
 ];
 const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
+/* 曾国藩八格: each maps to one hourly category */
+const ZENG=[
+ {id:"read",n:"读书",d:"阅读",cat:"read"},
+ {id:"work",n:"办公",d:"工作",cat:"work"},
+ {id:"meditate",n:"静坐",d:"冥想",cat:"meditate"},
+ {id:"study",n:"课子",d:"学习",cat:"study"},
+ {id:"social",n:"对客",d:"社交",cat:"social"},
+ {id:"reply",n:"回信",d:"有质量地回消息",cat:"reply"},
+ {id:"write",n:"属文",d:"写作",cat:"write"},
+ {id:"hobby",n:"乐在",d:"爱好 / 休闲",cat:"hobby"}
+];
+/* 50 天挑战 */
+const C50=[
+ {id:"wake",n:"8:30 前起床",d:"看起床时间",cc:"sleep"},
+ {id:"morning",n:"晨间 1 小时无手机",d:"中午前的乐在、静坐、阅读或写作",cc:"hobby"},
+ {id:"sport",n:"运动 1 小时",d:"运动格",cc:"sport"},
+ {id:"skill",n:"新技能 1 小时",d:"学习格（课子）",cc:"study"},
+ {id:"read",n:"阅读 10 页",d:"阅读格，或晚上手动勾",cc:"read"},
+ {id:"fast",n:"16+8 饮食",d:"晚上手动确认",cc:"meal"},
+ {id:"log",n:"记录全过程",d:"当天填满 16 小时以上",cc:"other"}
+];
 const HOURS=[];for(let h=6;h<=25;h++)HOURS.push(h);
 const hl=h=>String(h%24).padStart(2,"0");
 const WD="日一二三四五六";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-
 function guess(t){t=(t||"").toLowerCase();for(const c of CATS){if(c.k.some(k=>t.includes(k)))return c.id}return "other"}
 const pad=n=>String(n).padStart(2,"0");
 const key=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const parse=k=>{const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
 const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
-/* logical "now": 0-2am belongs to the previous day as slot 24/25 */
-function logicalNow(){const n=new Date();let d=new Date(n.getFullYear(),n.getMonth(),n.getDate());let h=n.getHours();if(h<6){if(h<2){d=addDays(d,-1);h+=24}}return{date:key(d),h,min:n.getMinutes(),raw:n}}
+const dayDiff=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
+const fmtT=v=>Math.floor(v)%24+":"+pad(Math.round((v%1)*60)%60);
+const md=k=>{const d=parse(k);return `${d.getMonth()+1}/${d.getDate()}`};
+/* 0–2am belongs to the previous day as slot 24/25 */
+function logicalNow(){const n=new Date();let d=new Date(n.getFullYear(),n.getMonth(),n.getDate());let h=n.getHours();if(h<2){d=addDays(d,-1);h+=24}return{date:key(d),h,raw:n}}
 
-/* ---------- storage ---------- */
+/* ---------- state + local storage ---------- */
 const LS="timelog.v1";
-const state={days:{},anchor:null,view:"log",weekStart:null,sumMode:"week",sumRef:null,demo:false,remote:false};
-function lsLoad(){try{const o=JSON.parse(localStorage.getItem(LS)||"{}");state.days=o.days||{};state.anchor=o.anchor||null}catch(e){}}
-function lsSave(){try{localStorage.setItem(LS,JSON.stringify({days:state.days,anchor:state.anchor}))}catch(e){}}
+const state={days:{},anchor:null,c50Start:null,su:0,view:"log",weekStart:null,checkDate:null,sumForm:"time",sumMode:"week",sumRef:null,demo:false};
+function lsLoad(){try{const o=JSON.parse(localStorage.getItem(LS)||"{}");state.days=o.days||{};state.anchor=o.anchor||null;state.c50Start=o.c50Start||null;state.su=o.su||0}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify({days:state.days,anchor:state.anchor,c50Start:state.c50Start,su:state.su}))}catch(e){}}
+
 /* ---------- GitHub sync: one JSON file in a private repo ---------- */
 const GH={owner:"eleanorliu737",repo:"timelog-data",path:"data.json"};
 const TK="timelog.ghtoken";
@@ -197,13 +258,17 @@ function ghUrl(){return `https://api.github.com/repos/${GH.owner}/${GH.repo}/con
 function ghHeaders(){return{"Authorization":"Bearer "+ghToken,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"}}
 function mergeIn(remote){
   if(!remote)return false;let changed=false;
-  if(remote.anchor&&remote.anchor!==state.anchor){state.anchor=remote.anchor;changed=true}
+  if((remote.su||0)>(state.su||0)||(!state.su&&remote.anchor)){
+    if(remote.anchor&&remote.anchor!==state.anchor){state.anchor=remote.anchor;changed=true}
+    if(remote.c50Start&&remote.c50Start!==state.c50Start){state.c50Start=remote.c50Start;changed=true}
+    state.su=Math.max(state.su||0,remote.su||0)}
   for(const k in (remote.days||{})){const r=remote.days[k],l=state.days[k];
     if(!l||(r.u||0)>(l.u||0)){state.days[k]=r;changed=true}}
   return changed}
-function localNewer(remote){const rd=(remote&&remote.days)||{};
+function localNewer(remote){if(!remote)return true;const rd=remote.days||{};
+  if((state.su||0)>(remote.su||0))return true;
   for(const k in state.days){const l=state.days[k];if(!rd[k]||(l.u||0)>(rd[k].u||0))return true}
-  return !remote||!remote.anchor}
+  return !remote.anchor}
 async function ghPull(){
   const r=await fetch(ghUrl()+"?t="+Date.now(),{headers:ghHeaders(),cache:"no-store"});
   if(r.status===404){ghSha=null;return null}
@@ -211,12 +276,15 @@ async function ghPull(){
   if(!r.ok)throw{code:"net"};
   const j=await r.json();ghSha=j.sha;return JSON.parse(b64d(j.content||"")||"{}")}
 async function ghPush(){
-  const body={message:"timelog "+new Date().toISOString().slice(0,16),content:b64e(JSON.stringify({anchor:state.anchor,days:state.days})),...(ghSha?{sha:ghSha}:{})};
+  const data={anchor:state.anchor,c50Start:state.c50Start,su:state.su,days:state.days};
+  const body={message:"timelog "+new Date().toISOString().slice(0,16),content:b64e(JSON.stringify(data)),...(ghSha?{sha:ghSha}:{})};
   const r=await fetch(ghUrl(),{method:"PUT",headers:{...ghHeaders(),"Content-Type":"application/json"},body:JSON.stringify(body)});
   if(r.status===409||r.status===422)return "conflict";
   if(r.status===401||r.status===403)throw{code:"auth"};
   if(!r.ok)throw{code:"net"};
   const j=await r.json();ghSha=j.content.sha;return "ok"}
+function sheetOpen(){return !!$("#sheetRoot").innerHTML}
+function editing(){const a=document.activeElement;return a&&$("#main").contains(a)&&a.tagName==="INPUT"}
 async function ghSync(){
   if(!ghToken){setSync("仅存本机 · 未连接 GitHub");return}
   if(ghBusy){ghDirty=true;return}
@@ -224,84 +292,128 @@ async function ghSync(){
   try{
     for(let i=0;i<3;i++){
       const remote=await ghPull();
-      const changed=mergeIn(remote);
-      if(changed){lsSave();state.weekStart=currentWeekStart(state.weekStart);if(!$("#sheetRoot").innerHTML)render()}
+      if(mergeIn(remote)){lsSave();state.weekStart=currentWeekStart(state.weekStart);if(!sheetOpen()&&!editing())render()}
       if(!localNewer(remote)){setSync("已同步 GitHub");break}
-      const res=await ghPush();
-      if(res==="ok"){setSync("已同步 GitHub");break}
+      if(await ghPush()==="ok"){setSync("已同步 GitHub");break}
     }
   }catch(e){setSync(e&&e.code==="auth"?"GitHub token 无效或没有权限":"离线，已存本机，稍后同步")}
   ghBusy=false;if(ghDirty)scheduleSync(800)}
 function scheduleSync(ms){clearTimeout(ghTimer);ghTimer=setTimeout(ghSync,ms==null?1500:ms)}
 function saveDay(k){if(state.days[k])state.days[k].u=Date.now();lsSave();scheduleSync()}
-function saveSettings(){lsSave();scheduleSync()}
-function initRemote(){ghSync();
-  document.addEventListener("visibilitychange",()=>{if(!document.hidden)scheduleSync(300)});
-  window.addEventListener("online",()=>scheduleSync(300))}
+function saveSettings(){state.su=Date.now();lsSave();scheduleSync()}
 
-/* ---------- weeks: 7-day blocks counted from the first day you opened it ---------- */
-function currentWeekStart(ref){const n=ref?parse(ref):parse(logicalNow().date);const a=parse(state.anchor);const diff=Math.floor((n-a)/864e5);const off=Math.floor(diff/7)*7;return key(addDays(a,off))}
-
-function cellOf(k,h){const d=state.days[k];return d&&d.cells&&d.cells[h]}
-function setCell(k,h,v){const d=state.days[k]||(state.days[k]={cells:{}});d.cells=d.cells||{};if(v)d.cells[h]=v;else delete d.cells[h]}
+/* ---------- data helpers ---------- */
+function currentWeekStart(ref){const n=ref?parse(ref):parse(logicalNow().date);const a=parse(state.anchor);const diff=Math.round((n-a)/864e5);return key(addDays(a,Math.floor(diff/7)*7))}
+function dayObj(k){return state.days[k]||(state.days[k]={cells:{}})}
+function cellOf(k,h,src){const d=(src||state.days)[k];return d&&d.cells&&d.cells[h]}
+function setCell(k,h,v){const d=dayObj(k);d.cells=d.cells||{};if(v)d.cells[h]=v;else delete d.cells[h]}
+function filledCount(k,src){const d=(src||state.days)[k];return d&&d.cells?Object.keys(d.cells).length:0}
+function wakeOf(k,src){const d=(src||state.days)[k];if(!d)return null;
+  if(d.wake){const[a,b]=d.wake.split(":").map(Number);return a+b/60}
+  const cs=d.cells||{};if(!Object.keys(cs).length)return null;
+  for(const h of HOURS){const c=cs[h];if(c&&c.c!=="sleep")return h}return null}
+function hoursOf(k,cats,src,before){const cs=((src||state.days)[k]||{}).cells||{};return HOURS.filter(h=>cs[h]&&cats.includes(cs[h].c)&&(before==null||h<before))}
+const hrsInfo=hs=>hs.length?hs.map(h=>hl(h)+":00").join(" ")+" · "+hs.length+"h":"";
+function autoOf(form,id,k,src){
+  if(form==="zeng"){const it=ZENG.find(z=>z.id===id);const hs=hoursOf(k,[it.cat],src);return{ok:hs.length>0,info:hrsInfo(hs),h:hs.length}}
+  switch(id){
+    case "wake":{const w=wakeOf(k,src);return w==null?{ok:false,info:""}:{ok:w<=8.5,info:"起床 "+fmtT(w)}}
+    case "morning":{const hs=hoursOf(k,["hobby","meditate","read","write"],src,12);return{ok:hs.length>0,info:hrsInfo(hs)}}
+    case "sport":{const hs=hoursOf(k,["sport"],src);return{ok:hs.length>0,info:hrsInfo(hs)}}
+    case "skill":{const hs=hoursOf(k,["study"],src);return{ok:hs.length>0,info:hrsInfo(hs)}}
+    case "read":{const hs=hoursOf(k,["read"],src);return{ok:hs.length>0,info:hrsInfo(hs)}}
+    case "fast":{const hs=hoursOf(k,["meal"],src);if(!hs.length)return{ok:null,info:""};const a=Math.min(...hs),b=Math.max(...hs)+1;return{ok:null,info:`吃饭格 ${hl(a)}:00–${hl(b)}:00，约 ${b-a}h 窗口`}}
+    case "log":{const n=filledCount(k,src);return{ok:n>=16,info:n?`已填 ${n}/20 小时`:""}}
+  }}
+function statusOf(form,id,k,src){const d=(src||state.days)[k]||{};const man=(d[form]||{})[id];const a=autoOf(form,id,k,src);
+  return{ok:man!=null?man:!!a.ok,auto:a.ok,manual:man!=null,info:a.info,note:(d[form+"Note"]||{})[id]||"",h:a.h||0}}
+function scoreOf(form,k,src){const list=form==="zeng"?ZENG:C50;return list.filter(it=>statusOf(form,it.id,k,src).ok).length}
+function toggleItem(form,id,k){const s=statusOf(form,id,k);const v=!s.ok;const d=dayObj(k);d[form]=d[form]||{};
+  if(s.auto!==null&&v===!!s.auto)delete d[form][id];else if(s.auto===null&&!v)delete d[form][id];else d[form][id]=v;saveDay(k)}
+function c50DayNo(k){if(!state.c50Start)return null;const n=dayDiff(state.c50Start,k)+1;return n>=1&&n<=50?n:null}
 
 /* ---------- reminders ---------- */
 function reminder(){
-  const n=logicalNow();const day=state.days[n.date];let gap=0;
+  const n=logicalNow();let gap=0;
   for(let h=n.h-1;h>=6;h--){if(cellOf(n.date,h))break;gap++}
-  const late=(n.raw.getHours()===22&&n.raw.getMinutes()>=45)||n.raw.getHours()>=23||n.raw.getHours()<2;
+  const hr=n.raw.getHours();const late=(hr===22&&n.raw.getMinutes()>=45)||hr>=23||hr<2;
   const missing=HOURS.filter(h=>h<n.h&&!cellOf(n.date,h)).length;
-  if(late&&missing>0)return{msg:`睡前把今天补完：还有 ${missing} 个小时没填`,date:n.date,h:HOURS.find(h=>h<n.h&&!cellOf(n.date,h))};
-  if(gap>=5)return{msg:`已经 ${gap} 个小时没记录了`,date:n.date,h:n.h-gap};
-  return null;
-}
+  if(late&&missing>0)return{msg:`睡前把今天补完：还有 ${missing} 个小时没填`,act:"去填",go:()=>openCell(n.date,HOURS.find(h=>h<n.h&&!cellOf(n.date,h)))};
+  if(late&&c50DayNo(n.date)&&!statusOf("c50","fast",n.date).manual)return{msg:"睡前打卡：16+8 和手动项还没确认",act:"去打卡",go:()=>{state.view="check";state.checkDate=n.date;render()}};
+  if(gap>=5)return{msg:`已经 ${gap} 个小时没记录了`,act:"去填",go:()=>openCell(n.date,n.h-gap)};
+  return null}
+function bannerHTML(r){return r?`<div class="banner"><span>${r.msg}</span><button id="fixBtn">${r.act}</button></div>`:""}
+function bindBanner(r){if(r)$("#fixBtn").onclick=r.go}
 
 /* ---------- log view ---------- */
 function renderLog(){
   const ws=parse(state.weekStart);const days=[...Array(7)].map((_,i)=>addDays(ws,i));
-  $("#rangeLbl").textContent=`${ws.getMonth()+1}/${ws.getDate()} – ${days[6].getMonth()+1}/${days[6].getDate()}`;
+  $("#rangeLbl").textContent=`${md(key(ws))} – ${md(key(days[6]))}`;
   const n=logicalNow();const r=reminder();
-  let h="";
-  if(r)h+=`<div class="banner"><span>${r.msg}</span><button id="fixBtn">去填</button></div>`;
+  let h=bannerHTML(r);
   h+=`<div class="gridwrap"><table class="grid"><colgroup><col class="hc">${days.map(()=>"<col>").join("")}</colgroup><thead><tr><th></th>`;
-  for(const d of days){const k=key(d);const day=state.days[k];const wake=wakeOf(k);
-    h+=`<th class="${k===n.date?"today":""}"><button data-day="${k}" aria-label="设置 ${k} 起床时间"><span class="w">${WD[d.getDay()]}</span><span class="d">${d.getDate()}</span><span class="w">${wake!=null?"起 "+fmtT(wake):"&nbsp;"}</span></button></th>`}
+  for(const d of days){const k=key(d);const z=scoreOf("zeng",k);
+    h+=`<th class="${k===n.date?"today":""}"><button data-day="${k}" aria-label="${k} 打卡"><span class="w">${WD[d.getDay()]}</span><span class="d">${d.getDate()}</span><span class="pips" title="八格 ${z}/8">${ZENG.map((_,i)=>`<i class="${i<z?"on":""}"></i>`).join("")}</span></button></th>`}
   h+=`</tr></thead><tbody>`;
   for(const hr of HOURS){
     h+=`<tr class="${hr===12||hr===18||hr===24?"split":""}"><td class="h">${hl(hr)}</td>`;
     for(const d of days){const k=key(d);const c=cellOf(k,hr);
-      const past=k<n.date||(k===n.date&&hr<n.h);
-      const cls=["cell"];if(c)cls.push("f");if(c&&c.auto)cls.push("auto");if(k===n.date&&hr===n.h)cls.push("now");if(!c&&past&&k===n.date)cls.push("missed");
+      const past=k===n.date&&hr<n.h;
+      const cls=["cell"];if(c)cls.push("f");if(c&&c.auto)cls.push("auto");if(k===n.date&&hr===n.h)cls.push("now");if(!c&&past)cls.push("missed");
       h+=`<td class="${k===n.date?"today-col":""}"><button class="${cls.join(" ")}" data-k="${k}" data-h="${hr}" style="${c?`--cc:var(--c-${c.c})`:""}" aria-label="${k} ${hl(hr)}:00 ${c?esc(c.t):"空"}"><span>${c?esc(c.t):""}</span></button></td>`}
     h+=`</tr>`}
-  h+=`</tbody></table></div><div class="legend">${CATS.map(c=>`<span><i style="background:var(--c-${c.id})"></i>${c.n}</span>`).join("")}<span>• 右上圆点 = 自动导入</span></div>`;
+  h+=`</tbody></table></div><div class="legend">${CATS.map(c=>`<span><i style="background:var(--c-${c.id})"></i>${c.n}</span>`).join("")}<span>表头小点 = 八格完成数 · 点日期去打卡</span></div>`;
   $("#main").innerHTML=h;
   $("#main").querySelectorAll(".cell").forEach(b=>b.onclick=()=>openCell(b.dataset.k,+b.dataset.h));
-  $("#main").querySelectorAll("th button[data-day]").forEach(b=>b.onclick=()=>openWake(b.dataset.day));
-  if(r)$("#fixBtn").onclick=()=>openCell(r.date,r.h);
+  $("#main").querySelectorAll("th button[data-day]").forEach(b=>b.onclick=()=>{state.view="check";state.checkDate=b.dataset.day;render()});
+  bindBanner(r);
   const now=$("#main .cell.now");if(now&&!renderLog.scrolled){renderLog.scrolled=true;now.scrollIntoView({block:"center",inline:"nearest"})}
 }
-const fmtT=v=>Math.floor(v)%24+":"+pad(Math.round((v%1)*60));
 
-/* ---------- sheets ---------- */
+/* ---------- check-in view ---------- */
+function itemsHTML(form,k){const list=form==="zeng"?ZENG:C50;
+  return list.map(it=>{const s=statusOf(form,it.id,k);const col=form==="zeng"?it.cat:it.cc;
+    const tag=s.manual?"手动":(s.auto?"自动":(s.auto===null?"需手动":""));
+    return `<div class="item"><button class="tick ${s.ok?"on":""}" data-f="${form}" data-i="${it.id}" aria-pressed="${s.ok}" aria-label="${it.n}">✓</button>
+      <div class="nm"><b style="${form==="zeng"?`border-bottom:2px solid var(--c-${col})`:""}">${it.n}</b><span>${it.d}</span>${tag?`<span class="tag">${tag}</span>`:""}</div>
+      ${s.info?`<div class="info">${esc(s.info)}</div>`:""}
+      <input id="n-${form}-${it.id}" data-f="${form}" data-i="${it.id}" value="${esc(s.note)}" placeholder="${it.id==="read"&&form==="c50"?"读了什么、几页":"时间 / 备注，例如 21:30 回了导师邮件"}"></div>`}).join("")}
+function renderCheck(){
+  const k=state.checkDate;const d=parse(k);
+  $("#rangeLbl").textContent=`${md(k)} 周${WD[d.getDay()]}`;
+  const r=k===logicalNow().date?reminder():null;
+  const day=state.days[k]||{};const w=wakeOf(k);const z=scoreOf("zeng",k),c=scoreOf("c50",k);const no=c50DayNo(k);
+  let h=`<div class="wrapc">${bannerHTML(r)}
+   ${filledCount(k)?"":`<div class="note">这一天还没填小时格。填了之后，能判断的项目会自动打勾。</div>`}
+   <div class="card wakebox"><div><b style="font-weight:500">起床时间</b><div class="note">${day.wake?"手动填写":(w!=null?"按第一个非睡觉格估算："+fmtT(w):"还没有数据")}</div></div><input class="field" type="time" id="wk" value="${day.wake||""}"></div>
+   <div class="card"><h3><span>曾国藩八格</span><span class="score">${z}/8</span></h3><div class="items">${itemsHTML("zeng",k)}</div></div>
+   <div class="card"><h3><span>50 天挑战 <small>${no?`第 ${no} / 50 天`:(state.c50Start?"不在挑战期内":"还没设开始日期")}</small></span><span class="score">${c}/7</span></h3><div class="items">${itemsHTML("c50",k)}</div>
+   ${state.c50Start?"":`<div class="row" style="margin-top:8px"><button class="ghost" id="startHere">从这天开始 50 天挑战</button></div>`}</div>
+  </div>`;
+  $("#main").innerHTML=h;bindBanner(r);
+  $("#main").querySelectorAll(".tick").forEach(b=>b.onclick=()=>{toggleItem(b.dataset.f,b.dataset.i,k);renderCheck()});
+  $("#main").querySelectorAll(".item input").forEach(inp=>inp.onchange=()=>{const dd=dayObj(k);const f=inp.dataset.f+"Note";dd[f]=dd[f]||{};const v=inp.value.trim();if(v)dd[f][inp.dataset.i]=v;else delete dd[f][inp.dataset.i];saveDay(k)});
+  $("#wk").onchange=()=>{const dd=dayObj(k);const v=$("#wk").value;if(v)dd.wake=v;else delete dd.wake;saveDay(k);renderCheck()};
+  const sh=$("#startHere");if(sh)sh.onclick=()=>{state.c50Start=k;saveSettings();renderCheck()};
+}
+
+/* ---------- cell editor ---------- */
 function closeSheet(){$("#sheetRoot").innerHTML=""}
 function recents(){const seen=new Map();const ks=Object.keys(state.days).sort().reverse();
   for(const k of ks){const cs=state.days[k].cells||{};for(const h of Object.keys(cs).sort((a,b)=>b-a)){const c=cs[h];if(c&&c.t&&!seen.has(c.t))seen.set(c.t,c.c);if(seen.size>=10)break}if(seen.size>=10)break}
   return [...seen].map(([t,c])=>({t,c}))}
 function openCell(k,h){
-  const c=cellOf(k,h);const d=parse(k);let cat=c?c.c:null,picked=!!c;
-  const rs=recents();
+  const c=cellOf(k,h);const d=parse(k);let cat=c?c.c:null,picked=!!c;const rs=recents();
   $("#sheetRoot").innerHTML=`<div class="scrim" id="scrim"></div><div class="sheet" role="dialog" aria-label="填写">
-   <div><h2>周${WD[d.getDay()]} ${d.getMonth()+1}/${d.getDate()} · ${hl(h)}:00–${hl(h+1)}:00</h2><div class="sub">这一小时里占时间最多的事</div></div>
-   <input class="field" id="txt" placeholder="例如：AWS 课程 / 上班 / Instagram" value="${c?esc(c.t):""}" autocomplete="off">
+   <div><h2>周${WD[d.getDay()]} ${md(k)} · ${hl(h)}:00–${hl(h+1)}:00</h2><div class="sub">这一小时里占时间最多的事</div></div>
+   <input class="field" id="txt" placeholder="例如：AWS 课程 / 冥想 / 写公众号" value="${c?esc(c.t):""}" autocomplete="off">
    ${rs.length?`<div class="lab">最近</div><div class="chips quick">${rs.map((r,i)=>`<button class="chip" data-r="${i}" style="--cc:var(--c-${r.c})"><i></i>${esc(r.t)}</button>`).join("")}</div>`:""}
    <div class="lab">类别</div><div class="chips" id="cats">${CATS.map(x=>`<button class="chip" data-c="${x.id}" style="--cc:var(--c-${x.id})" aria-pressed="false"><i></i>${x.n}</button>`).join("")}</div>
    <div class="dur"><span>连续</span><button class="iconbtn" id="dm">−</button><b id="dn" style="font-family:var(--f-mono)">1</b><button class="iconbtn" id="dp">+</button><span>小时</span></div>
    <div class="actions">${c?`<button id="clr">清空</button>`:""}<button id="cancel">取消</button><button class="primary" id="ok">保存</button></div></div>`;
   const txt=$("#txt");let dur=1;
   const paint=()=>document.querySelectorAll("#cats .chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===cat));
-  const autoCat=()=>{if(!picked){cat=txt.value.trim()?guess(txt.value):null;paint()}};
-  paint();txt.oninput=autoCat;
+  paint();txt.oninput=()=>{if(!picked){cat=txt.value.trim()?guess(txt.value):null;paint()}};
   document.querySelectorAll("#cats .chip").forEach(b=>b.onclick=()=>{cat=b.dataset.c;picked=true;paint()});
   document.querySelectorAll(".quick .chip").forEach(b=>b.onclick=()=>{const r=rs[+b.dataset.r];txt.value=r.t;cat=r.c;picked=true;paint()});
   const maxDur=25-h+1;$("#dm").onclick=()=>{dur=Math.max(1,dur-1);$("#dn").textContent=dur};$("#dp").onclick=()=>{dur=Math.min(maxDur,dur+1);$("#dn").textContent=dur};
@@ -311,97 +423,134 @@ function openCell(k,h){
   $("#ok").onclick=save;txt.onkeydown=e=>{if(e.key==="Enter")save()};
   setTimeout(()=>{if(!c)txt.focus()},60);
 }
-function openWake(k){
-  const d=parse(k);const cur=state.days[k]&&state.days[k].wake;
-  $("#sheetRoot").innerHTML=`<div class="scrim" id="scrim"></div><div class="sheet" role="dialog" aria-label="起床时间">
-   <div><h2>周${WD[d.getDay()]} ${d.getMonth()+1}/${d.getDate()} 起床时间</h2><div class="sub">不填的话，按当天第一个不是“睡觉”的格子估算</div></div>
-   <input class="field" type="time" id="wk" value="${cur||""}">
-   <div class="actions">${cur?`<button id="clr">清除</button>`:""}<button id="cancel">取消</button><button class="primary" id="ok">保存</button></div></div>`;
-  $("#scrim").onclick=closeSheet;$("#cancel").onclick=closeSheet;
-  const set=v=>{const day=state.days[k]||(state.days[k]={cells:{}});if(v)day.wake=v;else delete day.wake;saveDay(k);closeSheet();render()};
-  $("#ok").onclick=()=>set($("#wk").value);if(cur)$("#clr").onclick=()=>set(null);
-}
 
 /* ---------- summary ---------- */
-function wakeOf(k,src){const days=src||state.days;const d=days[k];if(!d)return null;
-  if(d.wake){const[a,b]=d.wake.split(":").map(Number);return a+b/60}
-  const cs=d.cells||{};const any=Object.keys(cs).length;if(!any)return null;
-  for(const h of HOURS){const c=cs[h];if(c&&c.c!=="sleep")return h}return null}
-function rangeDays(){
-  if(state.sumMode==="week"){const ws=parse(currentWeekStart(state.sumRef));return [...Array(7)].map((_,i)=>key(addDays(ws,i)))}
-  const r=parse(state.sumRef);const out=[];const d=new Date(r.getFullYear(),r.getMonth(),1);while(d.getMonth()===r.getMonth()){out.push(key(d));d.setDate(d.getDate()+1)}return out}
+function rangeDays(){const r=parse(state.sumRef);const out=[];
+  if(state.sumMode==="week"){const ws=parse(currentWeekStart(state.sumRef));for(let i=0;i<7;i++)out.push(key(addDays(ws,i)));return out}
+  const d=state.sumMode==="month"?new Date(r.getFullYear(),r.getMonth(),1):new Date(r.getFullYear(),0,1);
+  const stop=state.sumMode==="month"?(x=>x.getMonth()===r.getMonth()):(x=>x.getFullYear()===r.getFullYear());
+  while(stop(d)){out.push(key(d));d.setDate(d.getDate()+1)}return out}
+function buckets(ks){
+  if(state.sumMode==="year"){const m=[...Array(12)].map((_,i)=>({label:(i+1)+"月",keys:[]}));ks.forEach(k=>m[parse(k).getMonth()].keys.push(k));return m}
+  return ks.map(k=>({label:state.sumMode==="month"?String(parse(k).getDate()):"周"+WD[parse(k).getDay()],keys:[k]}))}
 function demoData(ks){const o={};let s=7;
-  const plan=[[6,"sleep","睡觉"],[7,"meal","早餐"],[8,"study","AWS 课程"],[9,"study","AWS 课程"],[10,"study","作品集项目"],[11,"phone","Instagram"],[12,"meal","午饭"],[13,"read","读书"],[14,"commute","练车"],[15,"work","上班"],[16,"work","上班"],[17,"work","上班"],[18,"work","上班"],[19,"work","上班"],[20,"meal","晚饭"],[21,"phone","小红书"],[22,"read","读书"],[23,"social","和朋友聊天"],[24,"phone","YouTube"],[25,"sleep","睡觉"]];
-  ks.forEach((k,i)=>{s=(s*9301+49297)%233280;const r=s/233280;const cells={};const wakeH=6.5+((i*7)%5)*0.5+r*0.4;
-    for(const[h,c,t]of plan){if(h<Math.floor(wakeH))cells[h]={c:"sleep",t:"睡觉"};else if(!(r>0.8&&h===14))cells[h]={c,t}}
-    o[k]={cells,wake:pad(Math.floor(wakeH))+":"+pad(Math.round((wakeH%1)*60)%60)}});return o}
+  const plan=[[7,"meditate","冥想"],[8,"hobby","画画"],[9,"study","AWS 课程"],[10,"study","作品集项目"],[11,"phone","Instagram"],[12,"meal","午饭"],[13,"read","读书"],[14,"commute","练车"],[15,"work","上班"],[16,"work","上班"],[17,"work","上班"],[18,"work","上班"],[19,"sport","散步"],[20,"meal","晚饭"],[21,"reply","回消息"],[22,"write","写公众号"],[23,"social","和朋友聊天"],[24,"phone","YouTube"],[25,"sleep","睡觉"]];
+  ks.forEach((k,i)=>{s=(s*9301+49297)%233280;const r=s/233280;const r2=((s*7)%1000)/1000;const cells={};const wakeH=6.5+((i*7)%5)*0.5+r*0.4;
+    for(const[h,c,t]of plan){if(h<Math.ceil(wakeH))cells[h]={c:"sleep",t:"睡觉"};else if(!((r>0.7&&h===19)||(r2>0.6&&h===22)||(r2<0.2&&h===7)))cells[h]={c,t}}
+    cells[6]={c:"sleep",t:"睡觉"};
+    o[k]={cells,wake:pad(Math.floor(wakeH))+":"+pad(Math.round((wakeH%1)*60)%60),c50:r>0.25?{fast:true}:{}}});return o}
+function lineChart(pts,{lo,hi,lbl,aria}){
+  const W=640,H=170,L=36,R=10,T=10,B=24;const n=pts.length;
+  const x=i=>L+(n===1?(W-L-R)/2:i*(W-L-R)/(n-1));const y=v=>T+(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*(H-T-B);
+  let g="";for(let v=lo;v<=hi;v++)g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${lbl(v)}</text>`;
+  const segs=[];let cur=[];pts.forEach((p,i)=>{if(p.v!=null)cur.push([x(i),y(p.v)]);else if(cur.length){segs.push(cur);cur=[]}});if(cur.length)segs.push(cur);
+  const path=segs.map(s=>`<polyline points="${s.map(p=>p.join(",")).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`).join("");
+  const dots=pts.map((p,i)=>p.v!=null?`<circle cx="${x(i)}" cy="${y(p.v)}" r="${n>14?2.5:3.5}" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"><title>${p.label} ${fmtT(p.v)}</title></circle>`:"").join("");
+  const step=n>14?Math.ceil(n/8):1;const xl=pts.map((p,i)=>i%step===0?`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${p.label}</text>`:"").join("");
+  return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:300px;display:block" role="img" aria-label="${aria}">${g}${path}${dots}${xl}</svg></div>`}
+function barChart(pts,{color,fmt,aria,max}){
+  const W=640,H=150,L=28,R=6,T=14,B=22;const n=pts.length;
+  const mx=max||Math.max(4,...pts.map(p=>p.v||0));const top=max||Math.ceil(mx/2)*2;const bw=(W-L-R)/n;const y=v=>T+(1-v/top)*(H-T-B);
+  const stepY=top<=8?(top<=4?1:2):Math.ceil(top/4);
+  let g="";for(let v=0;v<=top;v+=stepY)g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-5}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
+  const step=n>14?Math.ceil(n/8):1;
+  const bars=pts.map((p,i)=>{const v=p.v||0;const bx=L+i*bw+bw*0.18,w=bw*0.64;
+    return (v?`<rect x="${bx}" y="${y(v)}" width="${w}" height="${y(0)-y(v)}" rx="2" fill="${color}"><title>${p.label} ${fmt(v)}</title></rect>${n<=14?`<text x="${bx+w/2}" y="${y(v)-3}" text-anchor="middle">${fmt(v)}</text>`:""}`:"")+
+      (i%step===0?`<text x="${bx+w/2}" y="${H-6}" text-anchor="middle">${p.label}</text>`:"")}).join("");
+  return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:300px;display:block" role="img" aria-label="${aria}">${g}${bars}</svg></div>`}
+function matrix(rows,cols){
+  const n=cols.length;const showCol=i=>n<=14||i===0||(i+1)%5===0;
+  let h=`<div class="mx"><div class="mxg" style="grid-template-columns:auto repeat(${n},minmax(6px,1fr));min-width:${n>14?320:0}px"><span></span>${cols.map((c,i)=>`<span class="cl">${showCol(i)?c:""}</span>`).join("")}`;
+  for(const r of rows){h+=`<span class="rl">${r.n}</span>`+r.vals.map((v,i)=>`<i style="background:${v==null?"var(--bg)":`color-mix(in srgb,var(--c-${r.cc}) ${Math.round(15+v*85)}%,var(--bg))`};${v?"":"opacity:.8"}" title="${r.n} ${cols[i]} ${v==null?"无":Math.round(v*100)+"%"}"></i>`).join("")}
+  return h+`</div></div>`}
+function kpi(k,v,d){return `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div></div>`}
+
 function renderSum(){
   const ks=rangeDays();const today=logicalNow().date;
-  const lbl=state.sumMode==="week"?(()=>{const a=parse(ks[0]),b=parse(ks[6]);return `${a.getMonth()+1}/${a.getDate()} – ${b.getMonth()+1}/${b.getDate()}`})():(()=>{const a=parse(ks[0]);return `${a.getFullYear()} 年 ${a.getMonth()+1} 月`})();
+  const lbl=state.sumMode==="week"?`${md(ks[0])} – ${md(ks[6])}`:state.sumMode==="month"?`${parse(ks[0]).getFullYear()} 年 ${parse(ks[0]).getMonth()+1} 月`:`${parse(ks[0]).getFullYear()} 年`;
   $("#rangeLbl").textContent=lbl;
-  const src=state.demo?demoData(ks):state.days;
+  const src=state.demo?demoData(ks.filter(k=>k<=today||state.sumMode==="week")):state.days;
+  const elapsedKs=ks.filter(k=>k<=today);const el=elapsedKs.length||ks.length;
+  const ctrl=`<div class="seg"><div class="tabs">${[["time","时间"],["zeng","八格"],["c50","50 天"]].map(([v,n])=>`<button data-form="${v}" aria-selected="${state.sumForm===v}">${n}</button>`).join("")}</div>
+    <div class="tabs">${[["week","周"],["month","月"],["year","年"]].map(([v,n])=>`<button data-mode="${v}" aria-selected="${state.sumMode===v}">${n}</button>`).join("")}</div></div>
+    ${state.demo?`<div class="row"><span class="demo-tag">示例数据，不是你的记录</span><button class="ghost" id="demoOff">退出示例</button></div>`:""}`;
+  const any=ks.some(k=>filledCount(k,src)||(src[k]&&(src[k].zeng||src[k].c50)));
+  let body;
+  if(!any)body=`<div class="card empty"><div>这段时间还没有记录。<br>在“记录”页点任意格子开始填。</div><button class="ghost" id="demoOn">先看看示例总结</button></div>`;
+  else body=state.sumForm==="time"?sumTime(ks,src,el,today):state.sumForm==="zeng"?sumZeng(ks,src,el,today):sumC50(ks,src,el,today);
+  $("#main").innerHTML=`<div class="sum">${ctrl}${body}${toolsHTML()}</div>`;bindSum();
+}
+function sumTime(ks,src,el,today){
   const cnt={};CATS.forEach(c=>cnt[c.id]=0);let filled=0;
   const parts=[["早上",6,12],["下午",12,18],["晚上",18,24],["深夜",24,26]].map(([n,a,b])=>({n,a,b,c:{},t:{}}));
-  const perDay=[];
-  for(const k of ks){const cs=(src[k]&&src[k].cells)||{};let sw=0,rd=0;
-    for(const h of HOURS){const c=cs[h];if(!c)continue;filled++;cnt[c.c]=(cnt[c.c]||0)+1;if(c.c==="study"||c.c==="work")sw++;if(c.c==="read")rd++;
-      const p=parts.find(p=>h>=p.a&&h<p.b);p.c[c.c]=(p.c[c.c]||0)+1;p.t[c.t]=(p.t[c.t]||0)+1}
-    perDay.push({k,sw,rd,wake:wakeOf(k,src)})}
-  const elapsed=ks.filter(k=>k<=today).length||ks.length;
-  const ctrl=`<div class="row" style="justify-content:space-between"><div class="tabs"><button id="mW" aria-selected="${state.sumMode==="week"}">周</button><button id="mM" aria-selected="${state.sumMode==="month"}">月</button></div>${state.demo?`<span class="demo-tag">示例数据</span><button class="ghost" id="demoOff">退出示例</button>`:""}</div>`;
-  if(!filled){
-    $("#main").innerHTML=`<div class="sum">${ctrl}<div class="card empty"><div>这段时间还没有记录。<br>在“记录”页点任意格子开始填。</div><button class="ghost" id="demoOn">先看看示例总结</button></div>${toolsHTML()}</div>`;
-    bindSum();return}
-  const wakes=perDay.filter(d=>d.wake!=null);const avgW=wakes.length?wakes.reduce((a,b)=>a+b.wake,0)/wakes.length:null;
-  const sw=cnt.study+cnt.work;
-  const max=Math.max(...CATS.map(c=>cnt[c.id]),1);
-  const swDays=perDay.filter(d=>d.k<=today||state.demo);
-  let h=`<div class="sum">${ctrl}
-  <div class="kpis">
-   <div class="kpi"><div class="k">学习 + 工作</div><div class="v">${sw}<small> h</small></div><div class="d">学习 ${cnt.study} · 工作 ${cnt.work} · 日均 ${(sw/elapsed).toFixed(1)}</div></div>
-   <div class="kpi"><div class="k">阅读</div><div class="v">${cnt.read}<small> h</small></div><div class="d">日均 ${(cnt.read/elapsed).toFixed(1)} h</div></div>
-   <div class="kpi"><div class="k">平均起床</div><div class="v">${avgW!=null?fmtT(avgW):"—"}</div><div class="d">${wakes.length} 天有数据</div></div>
-   <div class="kpi"><div class="k">刷手机</div><div class="v">${cnt.phone}<small> h</small></div><div class="d">记录覆盖 ${Math.round(filled/(elapsed*20)*100)}%</div></div>
-  </div>
-  <div class="card"><h3>早起曲线<small>越高越早</small></h3>${wakeChart(perDay)}</div>
-  <div class="card"><h3>学习 + 工作 每日小时</h3>${dayBars(swDays)}</div>
-  <div class="card"><h3>一天的节奏<small>各时段在做什么</small></h3><div class="parts">${parts.map(p=>{const tot=Object.values(p.c).reduce((a,b)=>a+b,0);
+  for(const k of ks){const cs=(src[k]&&src[k].cells)||{};
+    for(const h of HOURS){const c=cs[h];if(!c)continue;filled++;cnt[c.c]=(cnt[c.c]||0)+1;const p=parts.find(p=>h>=p.a&&h<p.b);p.c[c.c]=(p.c[c.c]||0)+1;p.t[c.t]=(p.t[c.t]||0)+1}}
+  const bk=buckets(ks);const yr=state.sumMode==="year";
+  const wakePts=bk.map(b=>{const ws=b.keys.map(k=>wakeOf(k,src)).filter(v=>v!=null);return{label:b.label,v:ws.length?ws.reduce((a,c)=>a+c,0)/ws.length:null}});
+  const swPts=bk.map(b=>{const live=b.keys.filter(k=>k<=today||state.demo);const tot=live.reduce((a,k)=>a+hoursOf(k,["study","work"],src).length,0);return{label:b.label,v:yr?(live.length?+(tot/live.length).toFixed(1):0):tot}});
+  const wakes=ks.map(k=>wakeOf(k,src)).filter(v=>v!=null);const avgW=wakes.length?wakes.reduce((a,b)=>a+b,0)/wakes.length:null;
+  const sw=cnt.study+cnt.work;const max=Math.max(...CATS.map(c=>cnt[c.id]),1);
+  return `<div class="kpis">
+   ${kpi("学习 + 工作",`${sw}<small> h</small>`,`学习 ${cnt.study} · 工作 ${cnt.work} · 日均 ${(sw/el).toFixed(1)}`)}
+   ${kpi("阅读",`${cnt.read}<small> h</small>`,`日均 ${(cnt.read/el).toFixed(1)} h`)}
+   ${kpi("平均起床",avgW!=null?fmtT(avgW):"—",`${wakes.length} 天有数据`)}
+   ${kpi("刷手机",`${cnt.phone}<small> h</small>`,`记录覆盖 ${Math.round(filled/(el*20)*100)}%`)}</div>
+  <div class="card"><h3><span>早起曲线 <small>${yr?"每月平均 · ":""}越高越早</small></span></h3>${lineChart(wakePts,{lo:5,hi:12,lbl:v=>v+":00",aria:"起床时间曲线"})}</div>
+  <div class="card"><h3><span>学习 + 工作 <small>${yr?"每月日均小时":"每日小时"}</small></span></h3>${barChart(swPts,{color:"var(--c-study)",fmt:v=>v,aria:"学习加工作小时"})}</div>
+  <div class="card"><h3><span>一天的节奏 <small>各时段在做什么</small></span></h3><div class="parts">${parts.map(p=>{const tot=Object.values(p.c).reduce((a,b)=>a+b,0);
     const top=Object.entries(p.t).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t,n])=>`${esc(t)} ${n}h`).join(" · ");
     return `<div class="part"><span>${p.n}</span><div class="stack">${tot?CATS.filter(c=>p.c[c.id]).map(c=>`<b style="--cc:var(--c-${c.id});width:${p.c[c.id]/tot*100}%" title="${c.n} ${p.c[c.id]}h"></b>`).join(""):""}</div><div class="top3">${top||"无记录"}</div></div>`}).join("")}</div></div>
-  <div class="card"><h3>时间都去哪了<small>${filled} 小时已记录</small></h3><div class="bars">${CATS.filter(c=>cnt[c.id]).sort((a,b)=>cnt[b.id]-cnt[a.id]).map(c=>`<div class="bar" style="--cc:var(--c-${c.id})"><span>${c.n}</span><div class="t"><b style="width:${cnt[c.id]/max*100}%"></b></div><span class="n">${cnt[c.id]} h</span></div>`).join("")}</div></div>
-  ${toolsHTML()}</div>`;
-  $("#main").innerHTML=h;bindSum();
-}
-function wakeChart(pd){
-  const W=640,H=170,L=34,R=10,T=10,B=24;const lo=5,hi=12;
-  const x=i=>L+(pd.length===1?0:i*(W-L-R)/(pd.length-1));const y=v=>T+(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*(H-T-B);
-  let g="";for(let v=lo;v<=hi;v++){g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${v}:00</text>`}
-  let path="",segs=[];let cur=[];pd.forEach((d,i)=>{if(d.wake!=null)cur.push([x(i),y(d.wake)]);else if(cur.length){segs.push(cur);cur=[]}});if(cur.length)segs.push(cur);
-  segs.forEach(s=>{path+=`<polyline points="${s.map(p=>p.join(",")).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`});
-  let dots=pd.map((d,i)=>d.wake!=null?`<circle cx="${x(i)}" cy="${y(d.wake)}" r="${pd.length>10?2.5:3.5}" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"><title>${d.k} ${fmtT(d.wake)}</title></circle>`:"").join("");
-  const step=pd.length>10?Math.ceil(pd.length/8):1;
-  let xl=pd.map((d,i)=>i%step===0?`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${pd.length>10?parse(d.k).getDate():"周"+WD[parse(d.k).getDay()]}</text>`:"").join("");
-  return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:300px;display:block" role="img" aria-label="起床时间曲线">${g}${path}${dots}${xl}</svg></div>`}
-function dayBars(pd){
-  if(!pd.length)return `<div class="note">还没有到这段时间。</div>`;
-  const W=640,H=150,L=26,R=6,T=14,B=22;const mx=Math.max(4,...pd.map(d=>d.sw));const top=Math.ceil(mx/2)*2;
-  const n=rangeDays().length;const bw=(W-L-R)/n;const y=v=>T+(1-v/top)*(H-T-B);
-  let g="";for(let v=0;v<=top;v+=top>8?4:2)g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-5}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
-  const ks=rangeDays();const step=n>10?Math.ceil(n/8):1;
-  let bars=ks.map((k,i)=>{const d=pd.find(p=>p.k===k);const v=d?d.sw:0;const bx=L+i*bw+bw*0.18,w=bw*0.64;
-    return (v?`<rect x="${bx}" y="${y(v)}" width="${w}" height="${y(0)-y(v)}" rx="2" fill="var(--c-study)"><title>${k} ${v}h</title></rect>${n<=10?`<text x="${bx+w/2}" y="${y(v)-3}" text-anchor="middle">${v}</text>`:""}`:"")+
-      (i%step===0?`<text x="${bx+w/2}" y="${H-6}" text-anchor="middle">${n>10?parse(k).getDate():"周"+WD[parse(k).getDay()]}</text>`:"")}).join("");
-  return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:300px;display:block" role="img" aria-label="每日学习加工作小时">${g}${bars}</svg></div>`}
-function toolsHTML(){return `<div class="card tools"><h3 style="margin:0">GitHub 同步<small>${GH.owner}/${GH.repo}</small></h3>
+  <div class="card"><h3><span>时间都去哪了 <small>${filled} 小时已记录</small></span></h3><div class="bars">${CATS.filter(c=>cnt[c.id]).sort((a,b)=>cnt[b.id]-cnt[a.id]).map(c=>`<div class="bar" style="--cc:var(--c-${c.id})"><span>${c.n}</span><div class="t"><b style="width:${cnt[c.id]/max*100}%"></b></div><span class="n">${cnt[c.id]} h</span></div>`).join("")}</div></div>`}
+function formStats(form,ks,src,today){const list=form==="zeng"?ZENG:C50;const live=ks.filter(k=>k<=today||state.demo);
+  const per=list.map(it=>{let d=0,h=0;live.forEach(k=>{const s=statusOf(form,it.id,k,src);if(s.ok)d++;h+=s.h||0});return{it,d,h,rate:live.length?d/live.length:0}});
+  const scores=live.map(k=>({k,s:scoreOf(form,k,src)}));return{list,live,per,scores}}
+function sumZeng(ks,src,el,today){
+  const{per,scores,live}=formStats("zeng",ks,src,today);const full=scores.filter(s=>s.s===8).length;const avg=scores.length?scores.reduce((a,b)=>a+b.s,0)/scores.length:0;
+  const best=[...per].sort((a,b)=>b.rate-a.rate)[0],worst=[...per].sort((a,b)=>a.rate-b.rate)[0];const bk=buckets(ks);const yr=state.sumMode==="year";
+  const cols=bk.map(b=>b.label);
+  const rows=ZENG.map(it=>({n:it.n,cc:it.cat,vals:bk.map(b=>{const l=b.keys.filter(k=>k<=today||state.demo);return l.length?l.filter(k=>statusOf("zeng",it.id,k,src).ok).length/l.length:null})}));
+  const pts=bk.map(b=>{const l=b.keys.filter(k=>k<=today||state.demo);const t=l.reduce((a,k)=>a+scoreOf("zeng",k,src),0);return{label:b.label,v:l.length?+(t/l.length).toFixed(1):0}});
+  return `<div class="kpis">
+   ${kpi("平均每天",`${avg.toFixed(1)}<small> / 8</small>`,`${live.length} 天`)}
+   ${kpi("八格全满",`${full}<small> 天</small>`,"八项都完成")}
+   ${kpi("最稳的一格",best.it.n,`完成 ${best.d} 天`)}
+   ${kpi("最常缺的一格",worst.it.n,`完成 ${worst.d} 天`)}</div>
+  <div class="card"><h3><span>每格完成情况 <small>完成天数 · 累计小时</small></span></h3><div class="bars">${per.map(p=>`<div class="bar" style="--cc:var(--c-${p.it.cat})"><span>${p.it.n}<small style="color:var(--muted)"> ${p.it.d}</small></span><div class="t"><b style="width:${p.rate*100}%"></b></div><span class="n">${p.d}天 · ${p.h}h</span></div>`).join("")}</div></div>
+  <div class="card"><h3><span>八格日历 <small>${yr?"每月完成率":"颜色越深越完成"}</small></span></h3>${matrix(rows,cols)}</div>
+  <div class="card"><h3><span>每天完成几格 <small>${yr?"每月平均":"满分 8"}</small></span></h3>${barChart(pts,{color:"var(--accent)",fmt:v=>v,aria:"每天完成格数",max:8})}</div>`}
+function sumC50(ks,src,el,today){
+  const{per,scores,live}=formStats("c50",ks,src,today);const full=scores.filter(s=>s.s===7).length;const avg=scores.length?scores.reduce((a,b)=>a+b.s,0)/scores.length:0;
+  const worst=[...per].sort((a,b)=>a.rate-b.rate)[0];const bk=buckets(ks);const yr=state.sumMode==="year";
+  /* challenge progress, independent of period */
+  let prog="";
+  if(state.c50Start){const t=logicalNow().date;const cur=Math.min(50,Math.max(0,dayDiff(state.c50Start,t)+1));let streak=0,doneFull=0;
+    const sq=[...Array(50)].map((_,i)=>{const k=key(addDays(parse(state.c50Start),i));if(k>t)return `<i title="第${i+1}天"></i>`;const s=scoreOf("c50",k,src);if(s===7)doneFull++;return `<i class="p ${k===t?"cur":""}" style="background:color-mix(in srgb,var(--ok) ${Math.round(s/7*100)}%,var(--bg))" title="第${i+1}天 ${md(k)} ${s}/7"></i>`}).join("");
+    let d=t;if(scoreOf("c50",d,src)<7)d=key(addDays(parse(d),-1));while(d>=state.c50Start&&scoreOf("c50",d,src)===7){streak++;d=key(addDays(parse(d),-1))}
+    prog=`<div class="card"><h3><span>挑战进度 <small>${md(state.c50Start)} 开始</small></span><span class="score">第 ${cur} / 50 天</span></h3><div class="prog">${sq}</div>
+      <div class="row" style="justify-content:space-between;margin-top:10px"><span class="note">全部完成 ${doneFull} 天 · 当前连续 ${streak} 天</span><span class="row" style="gap:6px"><input class="field" type="date" id="c50s" value="${state.c50Start}" style="width:auto;font-size:13px;padding:5px 8px"></span></div></div>`}
+  else prog=`<div class="card"><h3><span>挑战进度</span></h3><div class="row"><span class="note">设定开始日期：</span><input class="field" type="date" id="c50s" style="width:auto;font-size:13px;padding:5px 8px"></div></div>`;
+  const rows=C50.map(it=>({n:it.n.replace(" 1 小时","").replace(" 10 页",""),cc:it.cc==="other"?"study":it.cc,vals:bk.map(b=>{const l=b.keys.filter(k=>k<=today||state.demo);return l.length?l.filter(k=>statusOf("c50",it.id,k,src).ok).length/l.length:null})}));
+  const pts=bk.map(b=>{const l=b.keys.filter(k=>k<=today||state.demo);const t=l.reduce((a,k)=>a+scoreOf("c50",k,src),0);return{label:b.label,v:l.length?+(t/l.length).toFixed(1):0}});
+  return `${prog}<div class="kpis">
+   ${kpi("平均每天",`${avg.toFixed(1)}<small> / 7</small>`,`${live.length} 天`)}
+   ${kpi("全部完成",`${full}<small> 天</small>`,"七项都打勾")}
+   ${kpi("最常缺",worst.it.n,`完成 ${worst.d} / ${live.length} 天`)}
+   ${kpi("早起达标",`${per[0].d}<small> 天</small>`,"8:30 前起床")}</div>
+  <div class="card"><h3><span>每项完成率</span></h3><div class="bars">${per.map(p=>`<div class="bar" style="--cc:var(--c-${p.it.cc})"><span>${p.it.n.replace(" 1 小时","").replace(" 10 页","")}</span><div class="t"><b style="width:${p.rate*100}%"></b></div><span class="n">${Math.round(p.rate*100)}% · ${p.d}天</span></div>`).join("")}</div></div>
+  <div class="card"><h3><span>打卡日历 <small>${yr?"每月完成率":"颜色越深越完成"}</small></span></h3>${matrix(rows,bk.map(b=>b.label))}</div>
+  <div class="card"><h3><span>每天完成几项 <small>${yr?"每月平均":"满分 7"}</small></span></h3>${barChart(pts,{color:"var(--ok)",fmt:v=>v,aria:"每天完成项数",max:7})}</div>`}
+function toolsHTML(){return `<div class="card tools"><h3 style="margin:0"><span>GitHub 同步 <small>${GH.owner}/${GH.repo}</small></span></h3>
   <div class="note">${ghToken?"已连接。换 token 就在下面重新粘贴。":"粘贴一个只对 "+GH.repo+" 有 Contents 读写权限的 token。它只存在这台设备的浏览器里。"}</div>
   <div class="row"><input class="field" id="tok" type="password" placeholder="github_pat_…" autocomplete="off" style="flex:1;min-width:0"><button class="ghost" id="tokBtn">保存</button>${ghToken?'<button class="ghost" id="tokDel">断开</button>':""}</div></div>
-  <div class="card tools"><h3 style="margin:0">批量导入<small>手机使用记录</small></h3>
+  <div class="card tools"><h3 style="margin:0"><span>批量导入 <small>手机使用记录</small></span></h3>
   <div class="note">每行一条：<code>日期 小时 内容</code>，日期可省略（默认今天）。例如<br><code>2026-10-15 21 Instagram</code><br><code>14 练车</code><br>导入的格子带圆点，不会覆盖你自己填的内容。</div>
   <textarea class="field" id="imp" placeholder="21 Instagram"></textarea>
   <div class="row"><button class="ghost" id="impBtn">导入</button><span class="note" id="impMsg"></span></div></div>`}
 function bindSum(){
-  $("#mW").onclick=()=>{state.sumMode="week";render()};$("#mM").onclick=()=>{state.sumMode="month";render()};
+  $("#main").querySelectorAll("[data-form]").forEach(b=>b.onclick=()=>{state.sumForm=b.dataset.form;render()});
+  $("#main").querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{state.sumMode=b.dataset.mode;render()});
   const on=$("#demoOn");if(on)on.onclick=()=>{state.demo=true;render()};const off=$("#demoOff");if(off)off.onclick=()=>{state.demo=false;render()};
+  const cs=$("#c50s");if(cs)cs.onchange=()=>{if(cs.value){state.c50Start=cs.value;saveSettings();render()}};
   $("#tokBtn").onclick=()=>{const v=$("#tok").value.trim();if(!v)return;ghToken=v;try{localStorage.setItem(TK,v)}catch(e){}ghSync().then(render)};
   const td=$("#tokDel");if(td)td.onclick=()=>{ghToken=null;try{localStorage.removeItem(TK)}catch(e){}setSync("仅存本机 · 未连接 GitHub");render()};
   $("#impBtn").onclick=()=>{
@@ -418,27 +567,31 @@ function bindSum(){
 
 /* ---------- shell ---------- */
 function render(){
-  $("#tabLog").setAttribute("aria-selected",state.view==="log");$("#tabSum").setAttribute("aria-selected",state.view==="sum");
-  state.view==="log"?renderLog():renderSum();
+  $("#tabLog").setAttribute("aria-selected",state.view==="log");$("#tabChk").setAttribute("aria-selected",state.view==="check");$("#tabSum").setAttribute("aria-selected",state.view==="sum");
+  if(state.view==="log")renderLog();else if(state.view==="check")renderCheck();else renderSum();
 }
 $("#tabLog").onclick=()=>{state.view="log";render()};
-$("#tabSum").onclick=()=>{state.view="sum";if(!state.sumRef)state.sumRef=state.weekStart;render()};
+$("#tabChk").onclick=()=>{state.view="check";state.checkDate=state.checkDate||logicalNow().date;render()};
+$("#tabSum").onclick=()=>{state.view="sum";render()};
 $("#prev").onclick=()=>shift(-1);$("#next").onclick=()=>shift(1);
-$("#todayBtn").onclick=()=>{state.weekStart=currentWeekStart();state.sumRef=logicalNow().date;renderLog.scrolled=false;render()};
+$("#todayBtn").onclick=()=>{const t=logicalNow().date;state.weekStart=currentWeekStart();state.sumRef=t;state.checkDate=t;renderLog.scrolled=false;render()};
 function shift(dir){
-  if(state.view==="log"){state.weekStart=key(addDays(parse(state.weekStart),7*dir))}
-  else if(state.sumMode==="week"){state.sumRef=key(addDays(parse(currentWeekStart(state.sumRef)),7*dir))}
-  else{const r=parse(state.sumRef);state.sumRef=key(new Date(r.getFullYear(),r.getMonth()+dir,1))}
+  if(state.view==="log")state.weekStart=key(addDays(parse(state.weekStart),7*dir));
+  else if(state.view==="check")state.checkDate=key(addDays(parse(state.checkDate),dir));
+  else if(state.sumMode==="week")state.sumRef=key(addDays(parse(currentWeekStart(state.sumRef)),7*dir));
+  else if(state.sumMode==="month"){const r=parse(state.sumRef);state.sumRef=key(new Date(r.getFullYear(),r.getMonth()+dir,1))}
+  else{const r=parse(state.sumRef);state.sumRef=key(new Date(r.getFullYear()+dir,0,1))}
   render()}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!$("#sheetRoot").innerHTML)render()});
-setInterval(()=>{if(!$("#sheetRoot").innerHTML&&state.view==="log")renderLog()},60000);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)return;scheduleSync(300);if(!sheetOpen()&&!editing())render()});
+window.addEventListener("online",()=>scheduleSync(300));
+setInterval(()=>{if(!sheetOpen()&&state.view==="log")renderLog()},60000);
 
 lsLoad();
 if(!state.anchor){state.anchor=logicalNow().date;lsSave()}
-state.weekStart=currentWeekStart();state.sumRef=logicalNow().date;
+state.weekStart=currentWeekStart();state.sumRef=logicalNow().date;state.checkDate=logicalNow().date;
 render();
-initRemote();
+ghSync();
 })();
 </script>
 </body></html>
