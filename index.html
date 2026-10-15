@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="时间日志">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>时间日志</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+/* Layout: one-screen app. Sticky header with week nav + two tabs; scrollable week grid (hours down, days across); bottom sheet for editing; summary as a stacked report. */
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#1B232E; --muted:#667283; --line:#D3DAE2; --accent:#1F5F7A; --accent-ink:#FFFFFF;
+  --warn:#B4532A; --warn-bg:#FBEDE5; --mix:17%; --today:#E3EBF2;
+  --c-sleep:#6E74A6; --c-study:#2F62C8; --c-work:#23866A; --c-read:#9A6A2E; --c-sport:#2A9AA0; --c-meal:#D18A28;
+  --c-commute:#8C93A0; --c-social:#B4508C; --c-phone:#D2483E; --c-chores:#7C8B3A; --c-other:#9AA3AE;
+  --f-body:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  --f-disp:"Noto Serif SC","Songti SC",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11151B; --surface:#1A2029; --ink:#E5E9EF; --muted:#8B96A6; --line:#2A333F; --accent:#6FB3CF; --accent-ink:#0E1A20;
+  --warn:#F0956A; --warn-bg:#2E1E17; --mix:30%; --today:#1E2833; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151B; --surface:#1A2029; --ink:#E5E9EF; --muted:#8B96A6; --line:#2A333F; --accent:#6FB3CF; --accent-ink:#0E1A20;
+  --warn:#F0956A; --warn-bg:#2E1E17; --mix:30%; --today:#1E2833; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{display:flex;flex-direction:column;height:100%}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 8px;display:flex;flex-direction:column;gap:8px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-disp);font-weight:600;font-size:20px;margin:0;letter-spacing:.02em}
+.tabs{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{border:0;background:none;padding:5px 14px;border-radius:999px;font-size:13px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nav .lbl{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.iconbtn{border:1px solid var(--line);background:var(--surface);width:34px;height:30px;border-radius:8px;font-size:16px;line-height:1}
+.ghost{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 10px;font-size:12px}
+.sync{font-size:11px;color:var(--muted)}
+main{flex:1;min-height:0;overflow:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 24px}
+.banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:10px}
+.banner button{border:1px solid currentColor;background:none;color:inherit;border-radius:7px;padding:4px 10px;font-size:12px;white-space:nowrap}
+/* grid */
+.gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table.grid{border-collapse:separate;border-spacing:0;width:100%;min-width:360px;table-layout:fixed}
+.grid th,.grid td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0}
+.grid tr>*:last-child{border-right:0}
+.grid thead th{position:sticky;top:0;background:var(--surface);z-index:2;font-weight:500;font-size:11px;padding:6px 2px;color:var(--muted)}
+.grid thead th button{border:0;background:none;padding:0;width:100%;display:flex;flex-direction:column;align-items:center;gap:1px;color:inherit}
+.grid thead th .d{font-family:var(--f-mono);font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+.grid thead th .w{font-size:10px;font-family:var(--f-mono)}
+.grid thead th.today{background:var(--today)}
+.grid thead th.today .d{color:var(--accent);font-weight:500}
+.grid col.hc{width:38px}
+.grid td.h{font-family:var(--f-mono);font-size:10px;color:var(--muted);text-align:center;vertical-align:top;padding-top:4px;font-variant-numeric:tabular-nums}
+.grid tr.split td{border-top:2px solid var(--line)}
+.cell{display:block;width:100%;height:40px;border:0;background:none;padding:3px 3px;text-align:left;font-size:11px;line-height:1.25;overflow:hidden;position:relative}
+.cell span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all}
+.cell.f{background:color-mix(in srgb,var(--cc) var(--mix),var(--surface));box-shadow:inset 3px 0 0 var(--cc)}
+.cell.auto::after{content:"";position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:var(--cc)}
+td.today-col{background:var(--today)}
+.cell.now{outline:2px solid var(--accent);outline-offset:-2px}
+.cell.missed{background:repeating-linear-gradient(135deg,transparent 0 5px,color-mix(in srgb,var(--warn) 10%,transparent) 5px 7px)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:11px;color:var(--muted)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:0}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgb(0 0 0 / .35);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:16px 16px 0 0;max-height:86%;overflow:auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:14px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  display:flex;flex-direction:column;gap:12px;max-width:560px;margin:0 auto;box-shadow:0 -8px 30px rgb(0 0 0 / .18)}
+.sheet h2{margin:0;font-size:15px;font-weight:500;font-family:var(--f-mono)}
+.sheet .sub{font-size:12px;color:var(--muted)}
+.field{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:13px;display:inline-flex;align-items:center;gap:5px}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--cc)}
+.chip[aria-pressed="true"]{border-color:var(--cc);background:color-mix(in srgb,var(--cc) 20%,var(--surface))}
+.quick .chip{font-size:12px;padding:4px 10px}
+.lab{font-size:11px;color:var(--muted);letter-spacing:.06em;margin-bottom:-6px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dur{display:flex;align-items:center;gap:8px;font-size:13px}
+.actions{display:flex;gap:8px}
+.actions button{flex:1;border-radius:10px;padding:11px;font-size:14px;border:1px solid var(--line);background:var(--surface)}
+.actions .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+/* summary */
+.sum{display:flex;flex-direction:column;gap:14px;max-width:760px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:620px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi .k{font-size:11px;color:var(--muted)}
+.kpi .v{font-family:var(--f-mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .v small{font-size:12px;color:var(--muted);font-weight:400}
+.kpi .d{font-size:11px;color:var(--muted);margin-top:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.card h3{margin:0 0 10px;font-size:13px;font-weight:500}
+.card h3 small{color:var(--muted);font-weight:400;margin-left:6px}
+.bars{display:flex;flex-direction:column;gap:7px}
+.bar{display:grid;grid-template-columns:56px 1fr 46px;align-items:center;gap:8px;font-size:12px}
+.bar .t{height:12px;border-radius:3px;background:var(--bg);overflow:hidden}
+.bar .t b{display:block;height:100%;background:var(--cc);border-radius:3px}
+.bar .n{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.stack{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--bg)}
+.stack b{height:100%;background:var(--cc)}
+.part{display:grid;grid-template-columns:40px 1fr;gap:8px;align-items:center;font-size:12px}
+.part .top3{grid-column:2;font-size:11px;color:var(--muted);margin-top:-3px}
+.parts{display:flex;flex-direction:column;gap:10px}
+svg text{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
+.empty{text-align:center;padding:28px 12px;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+.demo-tag{display:inline-block;font-size:11px;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:2px 8px}
+.tools{display:flex;flex-direction:column;gap:8px}
+.tools textarea{min-height:90px;font-family:var(--f-mono);font-size:13px}
+.note{font-size:12px;color:var(--muted);line-height:1.6}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+</style>
+</head><body>
+
+<div class="app">
+  <header>
+    <div class="top">
+      <h1>时间日志</h1>
+      <div class="tabs" role="tablist">
+        <button id="tabLog" role="tab" aria-selected="true">记录</button>
+        <button id="tabSum" role="tab" aria-selected="false">总结</button>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="iconbtn" id="prev" aria-label="上一段">‹</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+        <span class="lbl" id="rangeLbl"></span>
+        <span class="sync" id="sync">本机保存</span>
+      </div>
+      <div class="row" style="gap:6px">
+        <button class="ghost" id="todayBtn">今天</button>
+        <button class="iconbtn" id="next" aria-label="下一段">›</button>
+      </div>
+    </div>
+  </header>
+  <main id="main"></main>
+</div>
+<div id="sheetRoot"></div>
+
+<script>
+(function(){
+const CATS=[
+ {id:"sleep",n:"睡觉",k:["睡","sleep","nap","躺"]},
+ {id:"study",n:"学习",k:["学","课","复习","刷题","背","论文","aws","azure","course","study","leetcode","coding","代码","项目","编程","德语","german","ml","nlp","作品集"]},
+ {id:"work",n:"工作",k:["上班","工作","班","host","餐厅","shift","面试","简历","求职","work","job","外贸","客户","邮件"]},
+ {id:"read",n:"阅读",k:["读","阅读","看书","书","read","kindle","book"]},
+ {id:"sport",n:"运动",k:["跑","健身","瑜伽","散步","运动","gym","walk","run","yoga","游泳"]},
+ {id:"meal",n:"吃饭",k:["吃","饭","早餐","午餐","晚餐","做饭","cook","lunch","dinner","breakfast","咖啡"]},
+ {id:"commute",n:"路上",k:["通勤","公交","开车","练车","bus","dart","luas","路上","驾","drive"]},
+ {id:"social",n:"社交",k:["朋友","聊天","约会","电话","家人","视频","聚","party","call"]},
+ {id:"phone",n:"刷手机",k:["instagram","ins","小红书","抖音","tiktok","youtube","b站","刷","netflix","剧","游戏","微博","reddit","手机","x.com","twitter"]},
+ {id:"chores",n:"杂事",k:["洗","打扫","家务","购物","超市","收拾","整理","办事"]},
+ {id:"other",n:"其他",k:[]}
+];
+const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
+const HOURS=[];for(let h=6;h<=25;h++)HOURS.push(h);
+const hl=h=>String(h%24).padStart(2,"0");
+const WD="日一二三四五六";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function guess(t){t=(t||"").toLowerCase();for(const c of CATS){if(c.k.some(k=>t.includes(k)))return c.id}return "other"}
+const pad=n=>String(n).padStart(2,"0");
+const key=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parse=k=>{const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+/* logical "now": 0-2am belongs to the previous day as slot 24/25 */
+function logicalNow(){const n=new Date();let d=new Date(n.getFullYear(),n.getMonth(),n.getDate());let h=n.getHours();if(h<6){if(h<2){d=addDays(d,-1);h+=24}}return{date:key(d),h,min:n.getMinutes(),raw:n}}
+
+/* ---------- storage ---------- */
+const LS="timelog.v1";
+const state={days:{},anchor:null,view:"log",weekStart:null,sumMode:"week",sumRef:null,demo:false,remote:false};
+function lsLoad(){try{const o=JSON.parse(localStorage.getItem(LS)||"{}");state.days=o.days||{};state.anchor=o.anchor||null}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify({days:state.days,anchor:state.anchor}))}catch(e){}}
+/* ---------- GitHub sync: one JSON file in a private repo ---------- */
+const GH={owner:"eleanorliu737",repo:"timelog-data",path:"data.json"};
+const TK="timelog.ghtoken";
+let ghToken=null,ghSha=null,ghTimer=null,ghBusy=false,ghDirty=false;
+try{ghToken=localStorage.getItem(TK)}catch(e){}
+const b64e=s=>btoa(unescape(encodeURIComponent(s)));
+const b64d=s=>decodeURIComponent(escape(atob(s.replace(/\n/g,""))));
+function setSync(t){$("#sync").textContent=t}
+function ghUrl(){return `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`}
+function ghHeaders(){return{"Authorization":"Bearer "+ghToken,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"}}
+function mergeIn(remote){
+  if(!remote)return false;let changed=false;
+  if(remote.anchor&&remote.anchor!==state.anchor){state.anchor=remote.anchor;changed=true}
+  for(const k in (remote.days||{})){const r=remote.days[k],l=state.days[k];
+    if(!l||(r.u||0)>(l.u||0)){state.days[k]=r;changed=true}}
+  return changed}
+function localNewer(remote){const rd=(remote&&remote.days)||{};
+  for(const k in state.days){const l=state.days[k];if(!rd[k]||(l.u||0)>(rd[k].u||0))return true}
+  return !remote||!remote.anchor}
+async function ghPull(){
+  const r=await fetch(ghUrl()+"?t="+Date.now(),{headers:ghHeaders(),cache:"no-store"});
+  if(r.status===404){ghSha=null;return null}
+  if(r.status===401||r.status===403)throw{code:"auth"};
+  if(!r.ok)throw{code:"net"};
+  const j=await r.json();ghSha=j.sha;return JSON.parse(b64d(j.content||"")||"{}")}
+async function ghPush(){
+  const body={message:"timelog "+new Date().toISOString().slice(0,16),content:b64e(JSON.stringify({anchor:state.anchor,days:state.days})),...(ghSha?{sha:ghSha}:{})};
+  const r=await fetch(ghUrl(),{method:"PUT",headers:{...ghHeaders(),"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(r.status===409||r.status===422)return "conflict";
+  if(r.status===401||r.status===403)throw{code:"auth"};
+  if(!r.ok)throw{code:"net"};
+  const j=await r.json();ghSha=j.content.sha;return "ok"}
+async function ghSync(){
+  if(!ghToken){setSync("仅存本机 · 未连接 GitHub");return}
+  if(ghBusy){ghDirty=true;return}
+  ghBusy=true;ghDirty=false;setSync("同步中…");
+  try{
+    for(let i=0;i<3;i++){
+      const remote=await ghPull();
+      const changed=mergeIn(remote);
+      if(changed){lsSave();state.weekStart=currentWeekStart(state.weekStart);if(!$("#sheetRoot").innerHTML)render()}
+      if(!localNewer(remote)){setSync("已同步 GitHub");break}
+      const res=await ghPush();
+      if(res==="ok"){setSync("已同步 GitHub");break}
+    }
+  }catch(e){setSync(e&&e.code==="auth"?"GitHub token 无效或没有权限":"离线，已存本机，稍后同步")}
+  ghBusy=false;if(ghDirty)scheduleSync(800)}
+function scheduleSync(ms){clearTimeout(ghTimer);ghTimer=setTimeout(ghSync,ms==null?1500:ms)}
+function saveDay(k){if(state.days[k])state.days[k].u=Date.now();lsSave();scheduleSync()}
+function saveSettings(){lsSave();scheduleSync()}
+function initRemote(){ghSync();
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)scheduleSync(300)});
+  window.addEventListener("online",()=>scheduleSync(300))}
+
+/* ---------- weeks: 7-day blocks counted from the first day you opened it ---------- */
+function currentWeekStart(ref){const n=ref?parse(ref):parse(logicalNow().date);const a=parse(state.anchor);const diff=Math.floor((n-a)/864e5);const off=Math.floor(diff/7)*7;return key(addDays(a,off))}
+
+function cellOf(k,h){const d=state.days[k];return d&&d.cells&&d.cells[h]}
+function setCell(k,h,v){const d=state.days[k]||(state.days[k]={cells:{}});d.cells=d.cells||{};if(v)d.cells[h]=v;else delete d.cells[h]}
+
+/* ---------- reminders ---------- */
+function reminder(){
+  const n=logicalNow();const day=state.days[n.date];let gap=0;
+  for(let h=n.h-1;h>=6;h--){if(cellOf(n.date,h))break;gap++}
+  const late=(n.raw.getHours()===22&&n.raw.getMinutes()>=45)||n.raw.getHours()>=23||n.raw.getHours()<2;
+  const missing=HOURS.filter(h=>h<n.h&&!cellOf(n.date,h)).length;
+  if(late&&missing>0)return{msg:`睡前把今天补完：还有 ${missing} 个小时没填`,date:n.date,h:HOURS.find(h=>h<n.h&&!cellOf(n.date,h))};
+  if(gap>=5)return{msg:`已经 ${gap} 个小时没记录了`,date:n.date,h:n.h-gap};
+  return null;
+}
+
+/* ---------- log view ---------- */
+function renderLog(){
+  const ws=parse(state.weekStart);const days=[...Array(7)].map((_,i)=>addDays(ws,i));
+  $("#rangeLbl").textContent=`${ws.getMonth()+1}/${ws.getDate()} – ${days[6].getMonth()+1}/${days[6].getDate()}`;
+  const n=logicalNow();const r=reminder();
+  let h="";
+  if(r)h+=`<div class="banner"><span>${r.msg}</span><button id="fixBtn">去填</button></div>`;
+  h+=`<div class="gridwrap"><table class="grid"><colgroup><col class="hc">${days.map(()=>"<col>").join("")}</colgroup><thead><tr><th></th>`;
+  for(const d of days){const k=key(d);const day=state.days[k];const wake=wakeOf(k);
+    h+=`<th class="${k===n.date?"today":""}"><button data-day="${k}" aria-label="设置 ${k} 起床时间"><span class="w">${WD[d.getDay()]}</span><span class="d">${d.getDate()}</span><span class="w">${wake!=null?"起 "+fmtT(wake):"&nbsp;"}</span></button></th>`}
+  h+=`</tr></thead><tbody>`;
+  for(const hr of HOURS){
+    h+=`<tr class="${hr===12||hr===18||hr===24?"split":""}"><td class="h">${hl(hr)}</td>`;
+    for(const d of days){const k=key(d);const c=cellOf(k,hr);
+      const past=k<n.date||(k===n.date&&hr<n.h);
+      const cls=["cell"];if(c)cls.push("f");if(c&&c.auto)cls.push("auto");if(k===n.date&&hr===n.h)cls.push("now");if(!c&&past&&k===n.date)cls.push("missed");
+      h+=`<td class="${k===n.date?"today-col":""}"><button class="${cls.join(" ")}" data-k="${k}" data-h="${hr}" style="${c?`--cc:var(--c-${c.c})`:""}" aria-label="${k} ${hl(hr)}:00 ${c?esc(c.t):"空"}"><span>${c?esc(c.t):""}</span></button></td>`}
+    h+=`</tr>`}
+  h+=`</tbody></table></div><div class="legend">${CATS.map(c=>`<span><i style="background:var(--c-${c.id})"></i>${c.n}</span>`).join("")}<span>• 右上圆点 = 自动导入</span></div>`;
+  $("#main").innerHTML=h;
+  $("#main").querySelectorAll(".cell").forEach(b=>b.onclick=()=>openCell(b.dataset.k,+b.dataset.h));
+  $("#main").querySelectorAll("th button[data-day]").forEach(b=>b.onclick=()=>openWake(b.dataset.day));
+  if(r)$("#fixBtn").onclick=()=>openCell(r.date,r.h);
+  const now=$("#main .cell.now");if(now&&!renderLog.scrolled){renderLog.scrolled=true;now.scrollIntoView({block:"center",inline:"nearest"})}
+}
+const fmtT=v=>Math.floor(v)%24+":"+pad(Math.round((v%1)*60));
+
+/* ---------- sheets ---------- */
+function closeSheet(){$("#sheetRoot").innerHTML=""}
+function recents(){const seen=new Map();const ks=Object.keys(state.days).sort().reverse();
+  for(const k of ks){const cs=state.days[k].cells||{};for(const h of Object.keys(cs).sort((a,b)=>b-a)){const c=cs[h];if(c&&c.t&&!seen.has(c.t))seen.set(c.t,c.c);if(seen.size>=10)break}if(seen.size>=10)break}
+  return [...seen].map(([t,c])=>({t,c}))}
+function openCell(k,h){
+  const c=cellOf(k,h);const d=parse(k);let cat=c?c.c:null,picked=!!c;
+  const rs=recents();
+  $("#sheetRoot").innerHTML=`<div class="scrim" id="scrim"></div><div class="sheet" role="dialog" aria-label="填写">
+   <div><h2>周${WD[d.getDay()]} ${d.getMonth()+1}/${d.getDate()} · ${hl(h)}:00–${hl(h+1)}:00</h2><div class="sub">这一小时里占时间最多的事</div></div>
+   <input class="field" id="txt" placeholder="例如：AWS 课程 / 上班 / Instagram" value="${c?esc(c.t):""}" autocomplete="off">
+   ${rs.length?`<div class="lab">最近</div><div class="chips quick">${rs.map((r,i)=>`<button class="chip" data-r="${i}" style="--cc:var(--c-${r.c})"><i></i>${esc(r.t)}</button>`).join("")}</div>`:""}
+   <div class="lab">类别</div><div class="chips" id="cats">${CATS.map(x=>`<button class="chip" data-c="${x.id}" style="--cc:var(--c-${x.id})" aria-pressed="false"><i></i>${x.n}</button>`).join("")}</div>
+   <div class="dur"><span>连续</span><button class="iconbtn" id="dm">−</button><b id="dn" style="font-family:var(--f-mono)">1</b><button class="iconbtn" id="dp">+</button><span>小时</span></div>
+   <div class="actions">${c?`<button id="clr">清空</button>`:""}<button id="cancel">取消</button><button class="primary" id="ok">保存</button></div></div>`;
+  const txt=$("#txt");let dur=1;
+  const paint=()=>document.querySelectorAll("#cats .chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===cat));
+  const autoCat=()=>{if(!picked){cat=txt.value.trim()?guess(txt.value):null;paint()}};
+  paint();txt.oninput=autoCat;
+  document.querySelectorAll("#cats .chip").forEach(b=>b.onclick=()=>{cat=b.dataset.c;picked=true;paint()});
+  document.querySelectorAll(".quick .chip").forEach(b=>b.onclick=()=>{const r=rs[+b.dataset.r];txt.value=r.t;cat=r.c;picked=true;paint()});
+  const maxDur=25-h+1;$("#dm").onclick=()=>{dur=Math.max(1,dur-1);$("#dn").textContent=dur};$("#dp").onclick=()=>{dur=Math.min(maxDur,dur+1);$("#dn").textContent=dur};
+  $("#scrim").onclick=closeSheet;$("#cancel").onclick=closeSheet;
+  if(c)$("#clr").onclick=()=>{setCell(k,h,null);saveDay(k);closeSheet();render()};
+  const save=()=>{const t=txt.value.trim();if(!t){closeSheet();return}const v={t,c:cat||guess(t)};for(let i=0;i<dur;i++)setCell(k,h+i,{...v});saveDay(k);closeSheet();render()};
+  $("#ok").onclick=save;txt.onkeydown=e=>{if(e.key==="Enter")save()};
+  setTimeout(()=>{if(!c)txt.focus()},60);
+}
+function openWake(k){
+  const d=parse(k);const cur=state.days[k]&&state.days[k].wake;
+  $("#sheetRoot").innerHTML=`<div class="scrim" id="scrim"></div><div class="sheet" role="dialog" aria-label="起床时间">
+   <div><h2>周${WD[d.getDay()]} ${d.getMonth()+1}/${d.getDate()} 起床时间</h2><div class="sub">不填的话，按当天第一个不是“睡觉”的格子估算</div></div>
+   <input class="field" type="time" id="wk" value="${cur||""}">
+   <div class="actions">${cur?`<button id="clr">清除</button>`:""}<button id="cancel">取消</button><button class="primary" id="ok">保存</button></div></div>`;
+  $("#scrim").onclick=closeSheet;$("#cancel").onclick=closeSheet;
+  const set=v=>{const day=state.days[k]||(state.days[k]={cells:{}});if(v)day.wake=v;else delete day.wake;saveDay(k);closeSheet();render()};
+  $("#ok").onclick=()=>set($("#wk").value);if(cur)$("#clr").onclick=()=>set(null);
+}
+
+/* ---------- summary ---------- */
+function wakeOf(k,src){const days=src||state.days;const d=days[k];if(!d)return null;
+  if(d.wake){const[a,b]=d.wake.split(":").map(Number);return a+b/60}
+  const cs=d.cells||{};const any=Object.keys(cs).length;if(!any)return null;
+  for(const h of HOURS){const c=cs[h];if(c&&c.c!=="sleep")return h}return null}
+function rangeDays(){
+  if(state.sumMode==="week"){const ws=parse(currentWeekStart(state.sumRef));return [...Array(7)].map((_,i)=>key(addDays(ws,i)))}
+  const r=parse(state.sumRef);const out=[];const d=new Date(r.getFullYear(),r.getMonth(),1);while(d.getMonth()===r.getMonth()){out.push(key(d));d.setDate(d.getDate()+1)}return out}
+function demoData(ks){const o={};let s=7;
+  const plan=[[6,"sleep","睡觉"],[7,"meal","早餐"],[8,"study","AWS 课程"],[9,"study","AWS 课程"],[10,"study","作品集项目"],[11,"phone","Instagram"],[12,"meal","午饭"],[13,"read","读书"],[14,"commute","练车"],[15,"work","上班"],[16,"work","上班"],[17,"work","上班"],[18,"work","上班"],[19,"work","上班"],[20,"meal","晚饭"],[21,"phone","小红书"],[22,"read","读书"],[23,"social","和朋友聊天"],[24,"phone","YouTube"],[25,"sleep","睡觉"]];
+  ks.forEach((k,i)=>{s=(s*9301+49297)%233280;const r=s/233280;const cells={};const wakeH=6.5+((i*7)%5)*0.5+r*0.4;
+    for(const[h,c,t]of plan){if(h<Math.floor(wakeH))cells[h]={c:"sleep",t:"睡觉"};else if(!(r>0.8&&h===14))cells[h]={c,t}}
+    o[k]={cells,wake:pad(Math.floor(wakeH))+":"+pad(Math.round((wakeH%1)*60)%60)}});return o}
+function renderSum(){
+  const ks=rangeDays();const today=logicalNow().date;
+  const lbl=state.sumMode==="week"?(()=>{const a=parse(ks[0]),b=parse(ks[6]);return `${a.getMonth()+1}/${a.getDate()} – ${b.getMonth()+1}/${b.getDate()}`})():(()=>{const a=parse(ks[0]);return `${a.getFullYear()} 年 ${a.getMonth()+1} 月`})();
+  $("#rangeLbl").textContent=lbl;
+  const src=state.demo?demoData(ks):state.days;
+  const cnt={};CATS.forEach(c=>cnt[c.id]=0);let filled=0;
+  const parts=[["早上",6,12],["下午",12,18],["晚上",18,24],["深夜",24,26]].map(([n,a,b])=>({n,a,b,c:{},t:{}}));
+  const perDay=[];
+  for(const k of ks){const cs=(src[k]&&src[k].cells)||{};let sw=0,rd=0;
+    for(const h of HOURS){const c=cs[h];if(!c)continue;filled++;cnt[c.c]=(cnt[c.c]||0)+1;if(c.c==="study"||c.c==="work")sw++;if(c.c==="read")rd++;
+      const p=parts.find(p=>h>=p.a&&h<p.b);p.c[c.c]=(p.c[c.c]||0)+1;p.t[c.t]=(p.t[c.t]||0)+1}
+    perDay.push({k,sw,rd,wake:wakeOf(k,src)})}
+  const elapsed=ks.filter(k=>k<=today).length||ks.length;
+  const ctrl=`<div class="row" style="justify-content:space-between"><div class="tabs"><button id="mW" aria-selected="${state.sumMode==="week"}">周</button><button id="mM" aria-selected="${state.sumMode==="month"}">月</button></div>${state.demo?`<span class="demo-tag">示例数据</span><button class="ghost" id="demoOff">退出示例</button>`:""}</div>`;
+  if(!filled){
+    $("#main").innerHTML=`<div class="sum">${ctrl}<div class="card empty"><div>这段时间还没有记录。<br>在“记录”页点任意格子开始填。</div><button class="ghost" id="demoOn">先看看示例总结</button></div>${toolsHTML()}</div>`;
+    bindSum();return}
+  const wakes=perDay.filter(d=>d.wake!=null);const avgW=wakes.length?wakes.reduce((a,b)=>a+b.wake,0)/wakes.length:null;
+  const sw=cnt.study+cnt.work;
+  const max=Math.max(...CATS.map(c=>cnt[c.id]),1);
+  const swDays=perDay.filter(d=>d.k<=today||state.demo);
+  let h=`<div class="sum">${ctrl}
+  <div class="kpis">
+   <div class="kpi"><div class="k">学习 + 工作</div><div class="v">${sw}<small> h</small></div><div class="d">学习 ${cnt.study} · 工作 ${cnt.work} · 日均 ${(sw/elapsed).toFixed(1)}</div></div>
+   <div class="kpi"><div class="k">阅读</div><div class="v">${cnt.read}<small> h</small></div><div class="d">日均 ${(cnt.read/elapsed).toFixed(1)} h</div></div>
+   <div class="kpi"><div class="k">平均起床</div><div class="v">${avgW!=null?fmtT(avgW):"—"}</div><div class="d">${wakes.length} 天有数据</div></div>
+   <div class="kpi"><div class="k">刷手机</div><div class="v">${cnt.phone}<small> h</small></div><div class="d">记录覆盖 ${Math.round(filled/(elapsed*20)*100)}%</div></div>
+  </div>
+  <div class="card"><h3>早起曲线<small>越高越早</small></h3>${wakeChart(perDay)}</div>
+  <div class="card"><h3>学习 + 工作 每日小时</h3>${dayBars(swDays)}</div>
+  <div class="card"><h3>一天的节奏<small>各时段在做什么</small></h3><div class="parts">${parts.map(p=>{const tot=Object.values(p.c).reduce((a,b)=>a+b,0);
+    const top=Object.entries(p.t).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t,n])=>`${esc(t)} ${n}h`).join(" · ");
+    return `<div class="part"><span>${p.n}</span><div class="stack">${tot?CATS.filter(c=>p.c[c.id]).map(c=>`<b style="--cc:var(--c-${c.id});width:${p.c[c.id]/tot*100}%" title="${c.n} ${p.c[c.id]}h"></b>`).join(""):""}</div><div class="top3">${top||"无记录"}</div></div>`}).join("")}</div></div>
+  <div class="card"><h3>时间都去哪了<small>${filled} 小时已记录</small></h3><div class="bars">${CATS.filter(c=>cnt[c.id]).sort((a,b)=>cnt[b.id]-cnt[a.id]).map(c=>`<div class="bar" style="--cc:var(--c-${c.id})"><span>${c.n}</span><div class="t"><b style="width:${cnt[c.id]/max*100}%"></b></div><span class="n">${cnt[c.id]} h</span></div>`).join("")}</div></div>
+  ${toolsHTML()}</div>`;
+  $("#main").innerHTML=h;bindSum();
+}
+function wakeChart(pd){
+  const W=640,H=170,L=34,R=10,T=10,B=24;const lo=5,hi=12;
+  const x=i=>L+(pd.length===1?0:i*(W-L-R)/(pd.length-1));const y=v=>T+(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*(H-T-B);
+  let g="";for(let v=lo;v<=hi;v++){g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${v}:00</text>`}
+  let path="",segs=[];let cur=[];pd.forEach((d,i)=>{if(d.wake!=null)cur.push([x(i),y(d.wake)]);else if(cur.length){segs.push(cur);cur=[]}});if(cur.length)segs.push(cur);
+  segs.forEach(s=>{path+=`<polyline points="${s.map(p=>p.join(",")).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`});
+  let dots=pd.map((d,i)=>d.wake!=null?`<circle cx="${x(i)}" cy="${y(d.wake)}" r="${pd.length>10?2.5:3.5}" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"><title>${d.k} ${fmtT(d.wake)}</title></circle>`:"").join("");
+  const step=pd.length>10?Math.ceil(pd.length/8):1;
+  let xl=pd.map((d,i)=>i%step===0?`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${pd.length>10?parse(d.k).getDate():"周"+WD[parse(d.k).getDay()]}</text>`:"").join("");
+  return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:300px;display:block" role="img" aria-label="起床时间曲线">${g}${path}${dots}${xl}</svg></div>`}
+function dayBars(pd){
+  if(!pd.length)return `<div class="note">还没有到这段时间。</div>`;
+  const W=640,H=150,L=26,R=6,T=14,B=22;const mx=Math.max(4,...pd.map(d=>d.sw));const top=Math.ceil(mx/2)*2;
+  const n=rangeDays().length;const bw=(W-L-R)/n;const y=v=>T+(1-v/top)*(H-T-B);
+  let g="";for(let v=0;v<=top;v+=top>8?4:2)g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-5}" y="${y(v)+3}" text-anchor="end">${v}</text>`;
+  const ks=rangeDays();const step=n>10?Math.ceil(n/8):1;
+  let bars=ks.map((k,i)=>{const d=pd.find(p=>p.k===k);const v=d?d.sw:0;const bx=L+i*bw+bw*0.18,w=bw*0.64;
+    return (v?`<rect x="${bx}" y="${y(v)}" width="${w}" height="${y(0)-y(v)}" rx="2" fill="var(--c-study)"><title>${k} ${v}h</title></rect>${n<=10?`<text x="${bx+w/2}" y="${y(v)-3}" text-anchor="middle">${v}</text>`:""}`:"")+
+      (i%step===0?`<text x="${bx+w/2}" y="${H-6}" text-anchor="middle">${n>10?parse(k).getDate():"周"+WD[parse(k).getDay()]}</text>`:"")}).join("");
+  return `<div style="overflow-x:auto"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:300px;display:block" role="img" aria-label="每日学习加工作小时">${g}${bars}</svg></div>`}
+function toolsHTML(){return `<div class="card tools"><h3 style="margin:0">GitHub 同步<small>${GH.owner}/${GH.repo}</small></h3>
+  <div class="note">${ghToken?"已连接。换 token 就在下面重新粘贴。":"粘贴一个只对 "+GH.repo+" 有 Contents 读写权限的 token。它只存在这台设备的浏览器里。"}</div>
+  <div class="row"><input class="field" id="tok" type="password" placeholder="github_pat_…" autocomplete="off" style="flex:1;min-width:0"><button class="ghost" id="tokBtn">保存</button>${ghToken?'<button class="ghost" id="tokDel">断开</button>':""}</div></div>
+  <div class="card tools"><h3 style="margin:0">批量导入<small>手机使用记录</small></h3>
+  <div class="note">每行一条：<code>日期 小时 内容</code>，日期可省略（默认今天）。例如<br><code>2026-10-15 21 Instagram</code><br><code>14 练车</code><br>导入的格子带圆点，不会覆盖你自己填的内容。</div>
+  <textarea class="field" id="imp" placeholder="21 Instagram"></textarea>
+  <div class="row"><button class="ghost" id="impBtn">导入</button><span class="note" id="impMsg"></span></div></div>`}
+function bindSum(){
+  $("#mW").onclick=()=>{state.sumMode="week";render()};$("#mM").onclick=()=>{state.sumMode="month";render()};
+  const on=$("#demoOn");if(on)on.onclick=()=>{state.demo=true;render()};const off=$("#demoOff");if(off)off.onclick=()=>{state.demo=false;render()};
+  $("#tokBtn").onclick=()=>{const v=$("#tok").value.trim();if(!v)return;ghToken=v;try{localStorage.setItem(TK,v)}catch(e){}ghSync().then(render)};
+  const td=$("#tokDel");if(td)td.onclick=()=>{ghToken=null;try{localStorage.removeItem(TK)}catch(e){}setSync("仅存本机 · 未连接 GitHub");render()};
+  $("#impBtn").onclick=()=>{
+    const today=logicalNow().date;let ok=0,skip=0,bad=0;const touched=new Set();
+    for(const line of $("#imp").value.split(/\n/)){const s=line.trim();if(!s)continue;
+      const m=s.match(/^(?:(\d{4}-\d{2}-\d{2})\s+)?(\d{1,2})(?::\d{2})?\s+(.+)$/);if(!m){bad++;continue}
+      let k=m[1]||today;let h=+m[2];if(h<2){k=key(addDays(parse(k),-1));h+=24}if(h<6||h>25){bad++;continue}
+      if(cellOf(k,h)&&!cellOf(k,h).auto){skip++;continue}
+      setCell(k,h,{t:m[3].trim(),c:guess(m[3]),auto:true});touched.add(k);ok++}
+    touched.forEach(saveDay);
+    $("#impMsg").textContent=`导入 ${ok} 条`+(skip?`，${skip} 条已有记录未覆盖`:"")+(bad?`，${bad} 行格式不对`:"");
+    if(ok){$("#imp").value="";setTimeout(render,900)}};
+}
+
+/* ---------- shell ---------- */
+function render(){
+  $("#tabLog").setAttribute("aria-selected",state.view==="log");$("#tabSum").setAttribute("aria-selected",state.view==="sum");
+  state.view==="log"?renderLog():renderSum();
+}
+$("#tabLog").onclick=()=>{state.view="log";render()};
+$("#tabSum").onclick=()=>{state.view="sum";if(!state.sumRef)state.sumRef=state.weekStart;render()};
+$("#prev").onclick=()=>shift(-1);$("#next").onclick=()=>shift(1);
+$("#todayBtn").onclick=()=>{state.weekStart=currentWeekStart();state.sumRef=logicalNow().date;renderLog.scrolled=false;render()};
+function shift(dir){
+  if(state.view==="log"){state.weekStart=key(addDays(parse(state.weekStart),7*dir))}
+  else if(state.sumMode==="week"){state.sumRef=key(addDays(parse(currentWeekStart(state.sumRef)),7*dir))}
+  else{const r=parse(state.sumRef);state.sumRef=key(new Date(r.getFullYear(),r.getMonth()+dir,1))}
+  render()}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!$("#sheetRoot").innerHTML)render()});
+setInterval(()=>{if(!$("#sheetRoot").innerHTML&&state.view==="log")renderLog()},60000);
+
+lsLoad();
+if(!state.anchor){state.anchor=logicalNow().date;lsSave()}
+state.weekStart=currentWeekStart();state.sumRef=logicalNow().date;
+render();
+initRemote();
+})();
+</script>
+</body></html>
