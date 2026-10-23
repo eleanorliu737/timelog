@@ -19,7 +19,7 @@ body{margin:0}
 :root{
   --bg:#EDF0F3; --surface:#FFFFFF; --ink:#1B232E; --muted:#667283; --line:#D3DAE2; --accent:#1F5F7A; --accent-ink:#FFFFFF;
   --warn:#B4532A; --warn-bg:#FBEDE5; --ok:#23866A; --mix:17%; --today:#E3EBF2;
-  --c-sleep:#6E74A6; --c-meditate:#7FA05A; --c-reply:#3F97CF; --c-write:#8E5BB8; --c-hobby:#D9A12E;
+  --c-german:#4B3FB5; --c-job:#B5651D; --c-sleep:#8E94B8; --c-meditate:#7FA05A; --c-reply:#3F97CF; --c-write:#8E5BB8; --c-hobby:#D9A12E;
   --c-study:#2F62C8; --c-work:#23866A; --c-read:#9A6A2E; --c-sport:#2A9AA0; --c-meal:#C9774A;
   --c-commute:#8C93A0; --c-social:#C2508C; --c-phone:#D2483E; --c-chores:#8C7B6A; --c-other:#A9B0B9;
   --f-body:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
@@ -62,7 +62,7 @@ table.grid{border-collapse:separate;border-spacing:0;width:100%;min-width:360px;
 .grid thead th .d{font-family:var(--f-mono);font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
 .grid thead th .w{font-size:10px;font-family:var(--f-mono)}
 .grid thead th .pips{display:flex;gap:2px;margin-top:2px}
-.grid thead th .pips i{width:4px;height:4px;border-radius:50%;background:var(--line)}
+.grid thead th .pips i{width:5px;height:5px;border-radius:50%;background:var(--line)}
 .grid thead th .pips i.on{background:var(--accent)}
 .grid thead th.today{background:var(--today)}
 .grid thead th.today .d{color:var(--accent);font-weight:500}
@@ -191,8 +191,10 @@ const CATS=[
  {id:"reply",n:"回信",k:["回信","回消息","回邮件","回复","reply"]},
  {id:"write",n:"写作",k:["写作","写文","公众号","日记","writing","文章","博客","journal"]},
  {id:"hobby",n:"爱好",k:["爱好","画画","画","琴","吉他","手工","摄影","书法","烘焙","拼图","园艺","hobby","乐器","钩织","唱"]},
- {id:"study",n:"学习",k:["学","课","复习","刷题","背","论文","aws","azure","course","study","leetcode","coding","代码","项目","编程","德语","german","ml","nlp","作品集"]},
- {id:"work",n:"工作",k:["上班","工作","班","host","餐厅","shift","面试","简历","求职","work","job","外贸","客户","邮件"]},
+ {id:"german",n:"德语",k:["德语","german","deutsch","goethe","duolingo","多邻国","a1","a2","b1","b2","单词卡","nicos"]},
+ {id:"job",n:"求职",k:["求职","简历","cv","投递","投简历","申请","面试","linkedin","领英","cover letter","求职信","内推","networking","招聘","job hunt"]},
+ {id:"study",n:"学习",k:["学","课","复习","刷题","背","论文","aws","azure","course","study","leetcode","coding","代码","项目","编程","ml","nlp","作品集"]},
+ {id:"work",n:"工作",k:["上班","工作","班","host","餐厅","shift","work","外贸","客户","邮件"]},
  {id:"read",n:"阅读",k:["读","阅读","看书","书","read","kindle","book"]},
  {id:"sport",n:"运动",k:["跑","健身","瑜伽","散步","运动","gym","walk","run","yoga","游泳"]},
  {id:"meal",n:"吃饭",k:["吃","饭","早餐","午餐","晚餐","做饭","cook","lunch","dinner","breakfast","咖啡"]},
@@ -206,20 +208,26 @@ const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
 /* 曾国藩八格: each maps to one hourly category */
 const ZENG=[
  {id:"read",n:"读书",d:"阅读",cat:"read"},
- {id:"work",n:"办公",d:"工作",cat:"work"},
+ {id:"work",n:"办公",d:"工作 / 求职",cat:"work",cats:["work","job"]},
  {id:"meditate",n:"静坐",d:"冥想",cat:"meditate"},
- {id:"study",n:"课子",d:"学习",cat:"study"},
+ {id:"study",n:"课子",d:"学习 / 德语",cat:"study",cats:["study","german"]},
  {id:"social",n:"对客",d:"社交",cat:"social"},
  {id:"reply",n:"回信",d:"有质量地回消息",cat:"reply"},
  {id:"write",n:"属文",d:"写作",cat:"write"},
  {id:"hobby",n:"乐在",d:"爱好 / 休闲",cat:"hobby"}
+];
+/* 今天的闭环：只有这三项算数，其余都是加分 */
+const CORE=[
+ {id:"log",n:"记录",d:"当天填了 12 小时以上",cc:"accent"},
+ {id:"german",n:"德语",d:"有德语格就算；15 分钟也可以手动勾",cc:"german"},
+ {id:"job",n:"求职",d:"投递、改简历、联系人、准备面试，做一件就算",cc:"job"}
 ];
 /* 50 天挑战 */
 const C50=[
  {id:"wake",n:"8:30 前起床",d:"看起床时间",cc:"sleep"},
  {id:"morning",n:"晨间 1 小时无手机",d:"中午前的乐在、静坐、阅读或写作",cc:"hobby"},
  {id:"sport",n:"运动 1 小时",d:"运动格",cc:"sport"},
- {id:"skill",n:"新技能 1 小时",d:"学习格（课子）",cc:"study"},
+ {id:"skill",n:"新技能 1 小时",d:"学习或德语格",cc:"study"},
  {id:"read",n:"阅读 10 页",d:"阅读格，或晚上手动勾",cc:"read"},
  {id:"fast",n:"16+8 饮食",d:"晚上手动确认",cc:"meal"},
  {id:"log",n:"记录全过程",d:"当天填满 16 小时以上",cc:"other"}
@@ -242,7 +250,7 @@ function logicalNow(){const n=new Date();let d=new Date(n.getFullYear(),n.getMon
 
 /* ---------- state + local storage ---------- */
 const LS="timelog.v1";
-const state={days:{},anchor:null,c50Start:null,su:0,view:"log",weekStart:null,checkDate:null,sumForm:"time",sumMode:"week",sumRef:null,demo:false};
+const state={days:{},anchor:null,c50Start:null,su:0,view:"log",weekStart:null,checkDate:null,sumForm:"loop",moreOpen:false,sumMode:"week",sumRef:null,demo:false};
 function lsLoad(){try{const o=JSON.parse(localStorage.getItem(LS)||"{}");state.days=o.days||{};state.anchor=o.anchor||null;state.c50Start=o.c50Start||null;state.su=o.su||0}catch(e){}}
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify({days:state.days,anchor:state.anchor,c50Start:state.c50Start,su:state.su}))}catch(e){}}
 
@@ -315,21 +323,30 @@ function wakeOf(k,src){const d=(src||state.days)[k];if(!d)return null;
 function hoursOf(k,cats,src,before){const cs=((src||state.days)[k]||{}).cells||{};return HOURS.filter(h=>cs[h]&&cats.includes(cs[h].c)&&(before==null||h<before))}
 const hrsInfo=hs=>hs.length?hs.map(h=>hl(h)+":00").join(" ")+" · "+hs.length+"h":"";
 function autoOf(form,id,k,src){
-  if(form==="zeng"){const it=ZENG.find(z=>z.id===id);const hs=hoursOf(k,[it.cat],src);return{ok:hs.length>0,info:hrsInfo(hs),h:hs.length}}
+  if(form==="zeng"){const it=ZENG.find(z=>z.id===id);const hs=hoursOf(k,it.cats||[it.cat],src);return{ok:hs.length>0,info:hrsInfo(hs),h:hs.length}}
+  if(form==="core"){
+    if(id==="log"){const n=filledCount(k,src);return{ok:n>=12,info:n?`已填 ${n}/20 小时`:""}}
+    const hs=hoursOf(k,[id],src);return{ok:hs.length>0,info:hrsInfo(hs),h:hs.length}}
   switch(id){
     case "wake":{const w=wakeOf(k,src);return w==null?{ok:false,info:""}:{ok:w<=8.5,info:"起床 "+fmtT(w)}}
     case "morning":{const hs=hoursOf(k,["hobby","meditate","read","write"],src,12);return{ok:hs.length>0,info:hrsInfo(hs)}}
     case "sport":{const hs=hoursOf(k,["sport"],src);return{ok:hs.length>0,info:hrsInfo(hs)}}
-    case "skill":{const hs=hoursOf(k,["study"],src);return{ok:hs.length>0,info:hrsInfo(hs)}}
+    case "skill":{const hs=hoursOf(k,["study","german"],src);return{ok:hs.length>0,info:hrsInfo(hs)}}
     case "read":{const hs=hoursOf(k,["read"],src);return{ok:hs.length>0,info:hrsInfo(hs)}}
     case "fast":{const hs=hoursOf(k,["meal"],src);if(!hs.length)return{ok:null,info:""};const a=Math.min(...hs),b=Math.max(...hs)+1;return{ok:null,info:`吃饭格 ${hl(a)}:00–${hl(b)}:00，约 ${b-a}h 窗口`}}
     case "log":{const n=filledCount(k,src);return{ok:n>=16,info:n?`已填 ${n}/20 小时`:""}}
   }}
 function statusOf(form,id,k,src){const d=(src||state.days)[k]||{};const man=(d[form]||{})[id];const a=autoOf(form,id,k,src);
   return{ok:man!=null?man:!!a.ok,auto:a.ok,manual:man!=null,info:a.info,note:(d[form+"Note"]||{})[id]||"",h:a.h||0}}
-function scoreOf(form,k,src){const list=form==="zeng"?ZENG:C50;return list.filter(it=>statusOf(form,it.id,k,src).ok).length}
+const LISTS={zeng:ZENG,c50:C50,core:CORE};
+function scoreOf(form,k,src){const list=LISTS[form];return list.filter(it=>statusOf(form,it.id,k,src).ok).length}
 function toggleItem(form,id,k){const s=statusOf(form,id,k);const v=!s.ok;const d=dayObj(k);d[form]=d[form]||{};
   if(s.auto!==null&&v===!!s.auto)delete d[form][id];else if(s.auto===null&&!v)delete d[form][id];else d[form][id]=v;saveDay(k)}
+const coreDone=(k,src)=>statusOf("core","log",k,src).ok;
+/* 闭环运转天数：漏一天不断，连漏两天才断 */
+function loopRun(src){const t=logicalNow().date;let d=coreDone(t,src)?t:key(addDays(parse(t),-1));let n=0,miss=0;
+  for(let i=0;i<4000;i++){if(state.anchor&&d<state.anchor)break;if(coreDone(d,src)){n++;miss=0}else{miss++;if(miss>=2)break}d=key(addDays(parse(d),-1))}
+  return n}
 function c50DayNo(k){if(!state.c50Start)return null;const n=dayDiff(state.c50Start,k)+1;return n>=1&&n<=50?n:null}
 
 /* ---------- reminders ---------- */
@@ -339,7 +356,11 @@ function reminder(){
   const hr=n.raw.getHours();const late=(hr===22&&n.raw.getMinutes()>=45)||hr>=23||hr<2;
   const missing=HOURS.filter(h=>h<n.h&&!cellOf(n.date,h)).length;
   if(late&&missing>0)return{msg:`睡前把今天补完：还有 ${missing} 个小时没填`,act:"去填",go:()=>openCell(n.date,HOURS.find(h=>h<n.h&&!cellOf(n.date,h)))};
-  if(late&&c50DayNo(n.date)&&!statusOf("c50","fast",n.date).manual)return{msg:"睡前打卡：16+8 和手动项还没确认",act:"去打卡",go:()=>{state.view="check";state.checkDate=n.date;render()}};
+  const goChk=()=>{state.view="check";state.checkDate=n.date;render()};
+  const rv=(state.days[n.date]||{}).review||{};
+  if(late&&!rv.best&&!rv.next)return{msg:"睡前写一行复盘，闭环就完成了",act:"去写",go:goChk};
+  const y=key(addDays(parse(n.date),-1));
+  if(!coreDone(y)&&filledCount(y)===0&&!filledCount(n.date)&&n.h>=10)return{msg:"昨天没记录。今天接上就不算断",act:"去填",go:()=>openCell(n.date,n.h-1)};
   if(gap>=5)return{msg:`已经 ${gap} 个小时没记录了`,act:"去填",go:()=>openCell(n.date,n.h-gap)};
   return null}
 function bannerHTML(r){return r?`<div class="banner"><span>${r.msg}</span><button id="fixBtn">${r.act}</button></div>`:""}
@@ -352,8 +373,8 @@ function renderLog(){
   const n=logicalNow();const r=reminder();
   let h=bannerHTML(r);
   h+=`<div class="gridwrap"><table class="grid"><colgroup><col class="hc">${days.map(()=>"<col>").join("")}</colgroup><thead><tr><th></th>`;
-  for(const d of days){const k=key(d);const z=scoreOf("zeng",k);
-    h+=`<th class="${k===n.date?"today":""}"><button data-day="${k}" aria-label="${k} 打卡"><span class="w">${WD[d.getDay()]}</span><span class="d">${d.getDate()}</span><span class="pips" title="八格 ${z}/8">${ZENG.map((_,i)=>`<i class="${i<z?"on":""}"></i>`).join("")}</span></button></th>`}
+  for(const d of days){const k=key(d);
+    h+=`<th class="${k===n.date?"today":""}"><button data-day="${k}" aria-label="${k} 打卡"><span class="w">${WD[d.getDay()]}</span><span class="d">${d.getDate()}</span><span class="pips" title="记录 · 德语 · 求职">${CORE.map(it=>`<i class="${statusOf("core",it.id,k).ok?"on":""}" style="${statusOf("core",it.id,k).ok?`background:var(--c-${it.cc})`:""}"></i>`).join("")}</span></button></th>`}
   h+=`</tr></thead><tbody>`;
   for(const hr of HOURS){
     h+=`<tr class="${hr===12||hr===18||hr===24?"split":""}"><td class="h">${hl(hr)}</td>`;
@@ -362,7 +383,7 @@ function renderLog(){
       const cls=["cell"];if(c)cls.push("f");if(c&&c.auto)cls.push("auto");if(k===n.date&&hr===n.h)cls.push("now");if(!c&&past)cls.push("missed");
       h+=`<td class="${k===n.date?"today-col":""}"><button class="${cls.join(" ")}" data-k="${k}" data-h="${hr}" style="${c?`--cc:var(--c-${c.c})`:""}" aria-label="${k} ${hl(hr)}:00 ${c?esc(c.t):"空"}"><span>${c?esc(c.t):""}</span></button></td>`}
     h+=`</tr>`}
-  h+=`</tbody></table></div><div class="legend">${CATS.map(c=>`<span><i style="background:var(--c-${c.id})"></i>${c.n}</span>`).join("")}<span>表头小点 = 八格完成数 · 点日期去打卡</span></div>`;
+  h+=`</tbody></table></div><div class="legend">${CATS.map(c=>`<span><i style="background:var(--c-${c.id})"></i>${c.n}</span>`).join("")}<span>表头三个点 = 记录 · 德语 · 求职 · 点日期去打卡</span></div>`;
   $("#main").innerHTML=h;
   $("#main").querySelectorAll(".cell").forEach(b=>b.onclick=()=>openCell(b.dataset.k,+b.dataset.h));
   $("#main").querySelectorAll("th button[data-day]").forEach(b=>b.onclick=()=>{state.view="check";state.checkDate=b.dataset.day;render()});
@@ -371,28 +392,40 @@ function renderLog(){
 }
 
 /* ---------- check-in view ---------- */
-function itemsHTML(form,k){const list=form==="zeng"?ZENG:C50;
+function itemsHTML(form,k){const list=LISTS[form];
   return list.map(it=>{const s=statusOf(form,it.id,k);const col=form==="zeng"?it.cat:it.cc;
     const tag=s.manual?"手动":(s.auto?"自动":(s.auto===null?"需手动":""));
     return `<div class="item"><button class="tick ${s.ok?"on":""}" data-f="${form}" data-i="${it.id}" aria-pressed="${s.ok}" aria-label="${it.n}">✓</button>
       <div class="nm"><b style="${form==="zeng"?`border-bottom:2px solid var(--c-${col})`:""}">${it.n}</b><span>${it.d}</span>${tag?`<span class="tag">${tag}</span>`:""}</div>
       ${s.info?`<div class="info">${esc(s.info)}</div>`:""}
-      <input id="n-${form}-${it.id}" data-f="${form}" data-i="${it.id}" value="${esc(s.note)}" placeholder="${it.id==="read"&&form==="c50"?"读了什么、几页":"时间 / 备注，例如 21:30 回了导师邮件"}"></div>`}).join("")}
+      <input id="n-${form}-${it.id}" data-f="${form}" data-i="${it.id}" value="${esc(s.note)}" placeholder="${form==="core"?({log:"",german:"学了什么，例如 A1 第 3 课 / 50 个单词",job:"做了什么，例如 投了 Supermetrics / 改了简历"}[it.id]):(it.id==="read"&&form==="c50"?"读了什么、几页":"时间 / 备注，例如 21:30 回了导师邮件")}"></div>`}).join("")}
 function renderCheck(){
   const k=state.checkDate;const d=parse(k);
   $("#rangeLbl").textContent=`${md(k)} 周${WD[d.getDay()]}`;
   const r=k===logicalNow().date?reminder():null;
   const day=state.days[k]||{};const w=wakeOf(k);const z=scoreOf("zeng",k),c=scoreOf("c50",k);const no=c50DayNo(k);
+  const rv=day.review||{};const prevNext=((state.days[key(addDays(d,-1))]||{}).review||{}).next;
+  const run=loopRun();
   let h=`<div class="wrapc">${bannerHTML(r)}
-   ${filledCount(k)?"":`<div class="note">这一天还没填小时格。填了之后，能判断的项目会自动打勾。</div>`}
-   <div class="card wakebox"><div><b style="font-weight:500">起床时间</b><div class="note">${day.wake?"手动填写":(w!=null?"按第一个非睡觉格估算："+fmtT(w):"还没有数据")}</div></div><input class="field" type="time" id="wk" value="${day.wake||""}"></div>
-   <div class="card"><h3><span>曾国藩八格</span><span class="score">${z}/8</span></h3><div class="items">${itemsHTML("zeng",k)}</div></div>
-   <div class="card"><h3><span>50 天挑战 <small>${no?`第 ${no} / 50 天`:(state.c50Start?"不在挑战期内":"还没设开始日期")}</small></span><span class="score">${c}/7</span></h3><div class="items">${itemsHTML("c50",k)}</div>
-   ${state.c50Start?"":`<div class="row" style="margin-top:8px"><button class="ghost" id="startHere">从这天开始 50 天挑战</button></div>`}</div>
+   ${prevNext?`<div class="card" style="border-color:var(--accent)"><div class="note" style="margin-bottom:2px">昨天说今天要改的一件事</div><b style="font-weight:500">${esc(prevNext)}</b></div>`:""}
+   <div class="card"><h3><span>今天的闭环 <small>只有这三项算数</small></span><span class="score">闭环运转 ${run} 天</span></h3><div class="items">${itemsHTML("core",k)}</div></div>
+   <div class="card tools"><h3 style="margin:0"><span>晚间复盘 <small>一行就够</small></span></h3>
+     <input class="field" id="rvBest" value="${esc(rv.best||"")}" placeholder="今天哪一小时最值？" style="font-size:15px">
+     <input class="field" id="rvNext" value="${esc(rv.next||"")}" placeholder="明天改一件小事" style="font-size:15px"></div>
+   <details class="card" id="more" ${state.moreOpen?"open":""}><summary style="cursor:pointer;font-size:13px;font-weight:500">加分项 <span class="note">八格 ${z}/8 · 50 天 ${c}/7 · 不完成也没关系</span></summary>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:12px">
+     <div class="wakebox"><div><b style="font-weight:500">起床时间</b><div class="note">${day.wake?"手动填写":(w!=null?"按第一个非睡觉格估算："+fmtT(w):"还没有数据")}</div></div><input class="field" type="time" id="wk" value="${day.wake||""}"></div>
+     <div><h3 style="font-size:13px;font-weight:500;margin:0 0 6px">曾国藩八格 <small class="note">按周看覆盖，不必每天全满</small></h3><div class="items">${itemsHTML("zeng",k)}</div></div>
+     <div><h3 style="font-size:13px;font-weight:500;margin:0 0 6px">50 天挑战 <small class="note">${no?`第 ${no} / 50 天`:(state.c50Start?"不在挑战期内":"还没设开始日期")}</small></h3><div class="items">${itemsHTML("c50",k)}</div>
+     ${state.c50Start?"":`<div class="row" style="margin-top:8px"><button class="ghost" id="startHere">从这天开始 50 天挑战</button></div>`}</div>
+    </div></details>
   </div>`;
   $("#main").innerHTML=h;bindBanner(r);
+  $("#more").ontoggle=()=>{state.moreOpen=$("#more").open};
   $("#main").querySelectorAll(".tick").forEach(b=>b.onclick=()=>{toggleItem(b.dataset.f,b.dataset.i,k);renderCheck()});
   $("#main").querySelectorAll(".item input").forEach(inp=>inp.onchange=()=>{const dd=dayObj(k);const f=inp.dataset.f+"Note";dd[f]=dd[f]||{};const v=inp.value.trim();if(v)dd[f][inp.dataset.i]=v;else delete dd[f][inp.dataset.i];saveDay(k)});
+  const saveRv=()=>{const dd=dayObj(k);const b=$("#rvBest").value.trim(),n=$("#rvNext").value.trim();if(b||n)dd.review={best:b,next:n};else delete dd.review;saveDay(k)};
+  $("#rvBest").onchange=saveRv;$("#rvNext").onchange=saveRv;
   $("#wk").onchange=()=>{const dd=dayObj(k);const v=$("#wk").value;if(v)dd.wake=v;else delete dd.wake;saveDay(k);renderCheck()};
   const sh=$("#startHere");if(sh)sh.onclick=()=>{state.c50Start=k;saveSettings();renderCheck()};
 }
@@ -434,11 +467,11 @@ function buckets(ks){
   if(state.sumMode==="year"){const m=[...Array(12)].map((_,i)=>({label:(i+1)+"月",keys:[]}));ks.forEach(k=>m[parse(k).getMonth()].keys.push(k));return m}
   return ks.map(k=>({label:state.sumMode==="month"?String(parse(k).getDate()):"周"+WD[parse(k).getDay()],keys:[k]}))}
 function demoData(ks){const o={};let s=7;
-  const plan=[[7,"meditate","冥想"],[8,"hobby","画画"],[9,"study","AWS 课程"],[10,"study","作品集项目"],[11,"phone","Instagram"],[12,"meal","午饭"],[13,"read","读书"],[14,"commute","练车"],[15,"work","上班"],[16,"work","上班"],[17,"work","上班"],[18,"work","上班"],[19,"sport","散步"],[20,"meal","晚饭"],[21,"reply","回消息"],[22,"write","写公众号"],[23,"social","和朋友聊天"],[24,"phone","YouTube"],[25,"sleep","睡觉"]];
+  const plan=[[7,"meditate","冥想"],[8,"hobby","画画"],[9,"german","德语 A1"],[10,"job","投简历"],[11,"phone","Instagram"],[12,"meal","午饭"],[13,"read","读书"],[14,"commute","练车"],[15,"work","上班"],[16,"work","上班"],[17,"work","上班"],[18,"work","上班"],[19,"sport","散步"],[20,"meal","晚饭"],[21,"reply","回消息"],[22,"write","写公众号"],[23,"social","和朋友聊天"],[24,"phone","YouTube"],[25,"sleep","睡觉"]];
   ks.forEach((k,i)=>{s=(s*9301+49297)%233280;const r=s/233280;const r2=((s*7)%1000)/1000;const cells={};const wakeH=6.5+((i*7)%5)*0.5+r*0.4;
     for(const[h,c,t]of plan){if(h<Math.ceil(wakeH))cells[h]={c:"sleep",t:"睡觉"};else if(!((r>0.7&&h===19)||(r2>0.6&&h===22)||(r2<0.2&&h===7)))cells[h]={c,t}}
-    cells[6]={c:"sleep",t:"睡觉"};
-    o[k]={cells,wake:pad(Math.floor(wakeH))+":"+pad(Math.round((wakeH%1)*60)%60),c50:r>0.25?{fast:true}:{}}});return o}
+    cells[6]={c:"sleep",t:"睡觉"};if(r2>0.85){for(const h of [9,10,11,12,13,14,15,16,17,18])delete cells[h]}
+    o[k]={cells,wake:pad(Math.floor(wakeH))+":"+pad(Math.round((wakeH%1)*60)%60),c50:r>0.25?{fast:true}:{},review:r2>0.3?{best:["9 点的德语","上午投了两家","晚上写作"][i%3],next:["11 点前放下手机","先做德语再看邮件","早点出门散步"][i%3]}:undefined}});return o}
 function lineChart(pts,{lo,hi,lbl,aria}){
   const W=640,H=170,L=36,R=10,T=10,B=24;const n=pts.length;
   const x=i=>L+(n===1?(W-L-R)/2:i*(W-L-R)/(n-1));const y=v=>T+(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*(H-T-B);
@@ -471,13 +504,13 @@ function renderSum(){
   $("#rangeLbl").textContent=lbl;
   const src=state.demo?demoData(ks.filter(k=>k<=today||state.sumMode==="week")):state.days;
   const elapsedKs=ks.filter(k=>k<=today);const el=elapsedKs.length||ks.length;
-  const ctrl=`<div class="seg"><div class="tabs">${[["time","时间"],["zeng","八格"],["c50","50 天"]].map(([v,n])=>`<button data-form="${v}" aria-selected="${state.sumForm===v}">${n}</button>`).join("")}</div>
+  const ctrl=`<div class="seg"><div class="tabs">${[["loop","闭环"],["time","时间"],["zeng","八格"],["c50","50 天"]].map(([v,n])=>`<button data-form="${v}" aria-selected="${state.sumForm===v}">${n}</button>`).join("")}</div>
     <div class="tabs">${[["week","周"],["month","月"],["year","年"]].map(([v,n])=>`<button data-mode="${v}" aria-selected="${state.sumMode===v}">${n}</button>`).join("")}</div></div>
     ${state.demo?`<div class="row"><span class="demo-tag">示例数据，不是你的记录</span><button class="ghost" id="demoOff">退出示例</button></div>`:""}`;
   const any=ks.some(k=>filledCount(k,src)||(src[k]&&(src[k].zeng||src[k].c50)));
   let body;
   if(!any)body=`<div class="card empty"><div>这段时间还没有记录。<br>在“记录”页点任意格子开始填。</div><button class="ghost" id="demoOn">先看看示例总结</button></div>`;
-  else body=state.sumForm==="time"?sumTime(ks,src,el,today):state.sumForm==="zeng"?sumZeng(ks,src,el,today):sumC50(ks,src,el,today);
+  else body=state.sumForm==="loop"?sumLoop(ks,src,el,today):state.sumForm==="time"?sumTime(ks,src,el,today):state.sumForm==="zeng"?sumZeng(ks,src,el,today):sumC50(ks,src,el,today);
   $("#main").innerHTML=`<div class="sum">${ctrl}${body}</div>`;bindSum();
 }
 function sumTime(ks,src,el,today){
@@ -501,18 +534,33 @@ function sumTime(ks,src,el,today){
     const top=Object.entries(p.t).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t,n])=>`${esc(t)} ${n}h`).join(" · ");
     return `<div class="part"><span>${p.n}</span><div class="stack">${tot?CATS.filter(c=>p.c[c.id]).map(c=>`<b style="--cc:var(--c-${c.id});width:${p.c[c.id]/tot*100}%" title="${c.n} ${p.c[c.id]}h"></b>`).join(""):""}</div><div class="top3">${top||"无记录"}</div></div>`}).join("")}</div></div>
   <div class="card"><h3><span>时间都去哪了 <small>${filled} 小时已记录</small></span></h3><div class="bars">${CATS.filter(c=>cnt[c.id]).sort((a,b)=>cnt[b.id]-cnt[a.id]).map(c=>`<div class="bar" style="--cc:var(--c-${c.id})"><span>${c.n}</span><div class="t"><b style="width:${cnt[c.id]/max*100}%"></b></div><span class="n">${cnt[c.id]} h</span></div>`).join("")}</div></div>`}
+function sumLoop(ks,src,el,today){
+  const live=ks.filter(k=>k<=today||state.demo);const yr=state.sumMode==="year";const bk=buckets(ks);
+  const logged=live.filter(k=>coreDone(k,src)).length;
+  const gH=live.reduce((a,k)=>a+hoursOf(k,["german"],src).length,0),jH=live.reduce((a,k)=>a+hoursOf(k,["job"],src).length,0);
+  const gD=live.filter(k=>statusOf("core","german",k,src).ok).length,jD=live.filter(k=>statusOf("core","job",k,src).ok).length;
+  const rvs=live.filter(k=>src[k]&&src[k].review&&(src[k].review.best||src[k].review.next)).reverse();
+  const pts=cat=>bk.map(b=>{const l=b.keys.filter(k=>k<=today||state.demo);const t=l.reduce((a,k)=>a+hoursOf(k,[cat],src).length,0);return{label:b.label,v:yr?(l.length?+(t/l.length).toFixed(1):0):t}});
+  return `<div class="kpis">
+   ${kpi("闭环运转",`${state.demo?logged:loopRun(src)}<small> 天</small>`,`这段时间记录了 ${logged} / ${live.length} 天`)}
+   ${kpi("德语",`${gH}<small> h</small>`,`${gD} 天有学 · 日均 ${(gH/el).toFixed(1)} h`)}
+   ${kpi("求职",`${jH}<small> h</small>`,`${jD} 天有行动`)}
+   ${kpi("复盘",`${rvs.length}<small> 天</small>`,"写了晚间复盘")}</div>
+  <div class="card"><h3><span>德语 <small>${yr?"每月日均小时":"每天小时"}</small></span></h3>${barChart(pts("german"),{color:"var(--c-german)",fmt:v=>v,aria:"德语小时"})}</div>
+  <div class="card"><h3><span>求职 <small>${yr?"每月日均小时":"每天小时"}</small></span></h3>${barChart(pts("job"),{color:"var(--c-job)",fmt:v=>v,aria:"求职小时"})}</div>
+  <div class="card"><h3><span>复盘记录 <small>最值的一小时 → 第二天改的事</small></span></h3>${rvs.length?`<div class="items">${rvs.slice(0,14).map(k=>`<div class="item" style="grid-template-columns:42px minmax(0,1fr)"><span class="info" style="grid-column:1">${md(k)}</span><div style="font-size:13px;line-height:1.6">${esc(src[k].review.best||"—")}<div class="note">→ ${esc(src[k].review.next||"—")}</div></div></div>`).join("")}</div>`:`<div class="note">还没有复盘。在打卡页写一行就会出现在这里。</div>`}</div>`}
 function formStats(form,ks,src,today){const list=form==="zeng"?ZENG:C50;const live=ks.filter(k=>k<=today||state.demo);
   const per=list.map(it=>{let d=0,h=0;live.forEach(k=>{const s=statusOf(form,it.id,k,src);if(s.ok)d++;h+=s.h||0});return{it,d,h,rate:live.length?d/live.length:0}});
   const scores=live.map(k=>({k,s:scoreOf(form,k,src)}));return{list,live,per,scores}}
 function sumZeng(ks,src,el,today){
-  const{per,scores,live}=formStats("zeng",ks,src,today);const full=scores.filter(s=>s.s===8).length;const avg=scores.length?scores.reduce((a,b)=>a+b.s,0)/scores.length:0;
+  const{per,scores,live}=formStats("zeng",ks,src,today);const full=0;const avg=scores.length?scores.reduce((a,b)=>a+b.s,0)/scores.length:0;
   const best=[...per].sort((a,b)=>b.rate-a.rate)[0],worst=[...per].sort((a,b)=>a.rate-b.rate)[0];const bk=buckets(ks);const yr=state.sumMode==="year";
   const cols=bk.map(b=>b.label);
   const rows=ZENG.map(it=>({n:it.n,cc:it.cat,vals:bk.map(b=>{const l=b.keys.filter(k=>k<=today||state.demo);return l.length?l.filter(k=>statusOf("zeng",it.id,k,src).ok).length/l.length:null})}));
   const pts=bk.map(b=>{const l=b.keys.filter(k=>k<=today||state.demo);const t=l.reduce((a,k)=>a+scoreOf("zeng",k,src),0);return{label:b.label,v:l.length?+(t/l.length).toFixed(1):0}});
   return `<div class="kpis">
    ${kpi("平均每天",`${avg.toFixed(1)}<small> / 8</small>`,`${live.length} 天`)}
-   ${kpi("八格全满",`${full}<small> 天</small>`,"八项都完成")}
+   ${kpi("覆盖",`${per.filter(p=>p.d>0).length}<small> / 8 格</small>`,"这段时间至少出现过一次")}
    ${kpi("最稳的一格",best.it.n,`完成 ${best.d} 天`)}
    ${kpi("最常缺的一格",worst.it.n,`完成 ${worst.d} 天`)}</div>
   <div class="card"><h3><span>每格完成情况 <small>完成天数 · 累计小时</small></span></h3><div class="bars">${per.map(p=>`<div class="bar" style="--cc:var(--c-${p.it.cat})"><span>${p.it.n}<small style="color:var(--muted)"> ${p.it.d}</small></span><div class="t"><b style="width:${p.rate*100}%"></b></div><span class="n">${p.d}天 · ${p.h}h</span></div>`).join("")}</div></div>
